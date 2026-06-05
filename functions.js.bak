@@ -1,0 +1,469 @@
+// сохранение и загрузка
+
+function saveProgress() {
+    const gameData = {
+        level: level,                           // Сохраняем текущий уровень
+        lives: lives,                           // Сохраняем количество жизней
+        nutImgSrc: nutImg.src,                  // Изображение предметов
+        groundImgSrc: groundImg.src,            // Изображение земли
+        wolfImgSrc: wolfImg.src,                // Изображение врага
+        collectiblesName: collectiblesName,     // Название предметов
+        musicSrc: backgroundMusic.src           // Сохраняем путь к текущей музыке
+    };
+    localStorage.setItem('gameProgress', JSON.stringify(gameData));
+    console.log("Прогресс сохранён:", gameData);
+}
+
+function loadProgress() {
+    const savedData = localStorage.getItem('gameProgress');
+    if (savedData) {
+        const gameData = JSON.parse(savedData);
+        level = gameData.level || 1;                               // Загружаем уровень
+        lives = gameData.lives || 3;                               // Загружаем жизни
+        nutImg.src = gameData.nutImgSrc || 'nut.png';              // Восстанавливаем изображение предметов
+        groundImg.src = gameData.groundImgSrc || 'ground1.png';    // Восстанавливаем изображение земли
+        wolfImg.src = gameData.wolfImgSrc || 'img/char/wolficon.png'; // Восстанавливаем изображение врага
+        collectiblesName = gameData.collectiblesName || "Орешки: ";    // Восстанавливаем название предметов
+        currentBackgroundImg = backgroundImgs[level - 1];          // Устанавливаем нужный фон
+
+        // Восстанавливаем сохранённую музыку
+        if (gameData.musicSrc) {
+            backgroundMusic.pause(); // Останавливаем текущую музыку
+            backgroundMusic.src = gameData.musicSrc; // Устанавливаем сохраненный трек
+            backgroundMusic.load();
+            backgroundMusic.play();
+        }
+
+        console.log("Прогресс загружен:", gameData);
+
+        // Перезапуск уровня с загруженными настройками
+        resetLevel();
+    } else {
+        console.log("Сохранённых данных не найдено, игра начнётся с первого уровня.");
+        level = 1;
+        lives = 3;
+        resetLevel();
+    }
+    togglePause();
+}
+
+// Анимации и рендеринг ловушек
+
+let blink = 1; // Переменная для управления прозрачностью (мерцание)
+let shakeOffsetX = 0; // Смещение для вибрации по X
+let shakeOffsetY = 0; // Смещение для вибрации по Y
+let blinkSpeed = 0.1; // Скорость мигания
+
+// Обновляем переменные для мерцания и вибрации
+function updateTrapEffects() {
+    // Мерцание
+    blink = blink === 1 ? 0.7 : 1;
+
+    // Вибрация
+    shakeOffsetX = Math.random() * 2 - 1; // Случайное смещение по X
+    shakeOffsetY = Math.random() * 2 - 1; // Случайное смещение по Y
+}
+
+// Рендерим ловушки с мерцанием и вибрацией
+function renderTraps() {
+    traps.forEach(trap => {
+        ctx.save();
+        ctx.globalAlpha = blink; // Устанавливаем прозрачность для мерцания
+        ctx.translate(trap.x + shakeOffsetX, trap.y + shakeOffsetY); // Применяем смещения для вибрации
+        ctx.drawImage(trapImg, 0, 0, trap.width, trap.height);
+        ctx.restore();
+    });
+}
+
+let explosions = []; // Массив для хранения частиц взрыва
+
+function createExplosion(x, y) {
+    for (let i = 0; i < 20; i++) { // Количество частиц в взрыве
+        explosions.push({
+            x: x,
+            y: y,
+            dx: (Math.random() - 0.5) * 4, // Случайное направление по оси X
+            dy: (Math.random() - 0.5) * 4, // Случайное направление по оси Y
+            color: `rgba(255, ${Math.random() * 255}, 0, 1)`, // Оранжево-красный цвет
+            life: 30 // Время жизни частиц
+        });
+    }
+}
+
+function updateExplosions() {
+    explosions.forEach((particle, index) => {
+        particle.x += particle.dx;
+        particle.y += particle.dy;
+        particle.dy += 0.1; // Гравитация для частиц
+        particle.life--;
+
+        if (particle.life <= 0) {
+            explosions.splice(index, 1); // Удаляем частицу после завершения
+        }
+    });
+}
+
+function renderExplosions(ctx) {
+    explosions.forEach(particle => {
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = particle.color;
+        ctx.fill();
+    });
+}
+
+// функция отрисовки эффекта бонуса неуязвимости
+function updateInvincibilityBonus() {
+    if (invincibilityBonus) {
+        invincibilityBonus.hue += 1; // Изменение цвета
+        if (invincibilityBonus.hue >= 360) {
+            invincibilityBonus.hue = 0; // Сброс после полного цикла цветов
+        }
+    }
+}
+
+
+// Функции для погодных эффектов
+
+let particles = []; // Массив для хранения частиц
+
+function createWeatherEffect() {
+    particles = []; // Очищаем частицы при смене уровня
+    let particleCount = 100; // Количество частиц
+
+    if (level >= 4 && level <= 6) {
+        // Дождь
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                speedY: 5 + Math.random() * 3, // Скорость капель
+                length: 10 + Math.random() * 10, // Длина капель
+                color: 'rgba(0, 119, 190, 0.5)' // Синий оттенок для дождя
+            });
+        }
+    } else if (level >= 34 && level <= 36) {
+        // Снег
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                speedY: 1 + Math.random() * 1.5, // Скорость падения снега
+                size: 3 + Math.random() * 3, // Размер снежинок
+                color: 'rgba(255, 255, 255, 0.8)' // Белый цвет для снега
+            });
+        }
+    } else if (level >= 10 && level <= 12) {
+        // Туман
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                speedX: -0.5 + Math.random(), // Медленное горизонтальное движение
+                size: 20 + Math.random() * 30, // Крупные частицы тумана
+                color: 'rgba(200, 200, 200, 0.15)' // Полупрозрачный серый
+            });
+        }
+    }
+    else if (level >= 24 && level <= 29) {
+        // Пепел
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                speedY: -0.5 + Math.random() * -1.5, // Поднимается вверх
+                size: 2 + Math.random() * 2, // Мелкие частицы
+                color: 'rgba(105, 105, 105, 0.5)' // Тёмно-серый для пепла
+            });
+        }
+    }
+}
+
+// Функция для обновления положения частиц
+function updateParticles() {
+    particles.forEach(particle => {
+        if (level >= 4 && level <= 6) {
+            // Дождь
+            particle.y += particle.speedY;
+            if (particle.y > canvas.height) {
+                particle.y = -particle.length; // Возвращаем каплю наверх
+            }
+        } else if (level >= 34 && level <= 36) {
+            // Снег
+            particle.y += particle.speedY;
+            if (particle.y > canvas.height) {
+                particle.y = -particle.size; // Возвращаем снежинку наверх
+            }
+        } else if (level >= 10 && level <= 12) { // Туман
+            particle.x += particle.speedX;
+            if (particle.x < -particle.size) {
+                particle.x = canvas.width + particle.size; // Перемещаем туман обратно справа
+            }
+        } else if (level >= 24 && level <= 29) { // Пепел
+            particle.y += particle.speedY;
+            if (particle.y < -particle.size) {
+                particle.y = canvas.height; // Возвращаем пепел вниз
+            }
+        }
+
+    });
+}
+
+// Функция для отрисовки частиц на экране
+function renderParticles() {
+    particles.forEach(particle => {
+        ctx.beginPath();
+        if (level >= 4 && level <= 6) {
+            // Дождь
+            ctx.strokeStyle = particle.color;
+            ctx.lineWidth = 1;
+            ctx.moveTo(particle.x, particle.y);
+            ctx.lineTo(particle.x, particle.y + particle.length);
+            ctx.stroke();
+        } else if (level >= 34 && level <= 36) {
+            // Снег
+            ctx.fillStyle = particle.color;
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (level >= 10 && level <= 12) { // Туман
+            ctx.fillStyle = particle.color;
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (level >= 24 && level <= 29) { // Пепел
+            ctx.fillStyle = particle.color;
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.closePath();
+    });
+}
+
+function StoryAdvance() {
+    // Проверяем, является ли уровень кратным 3
+    if (level % 3 !== 0 || level > 33) return;
+
+    isPaused = true; // Включаем паузу
+    const backgroundMusic = document.getElementById("backgroundMusic");
+
+    switch (level) {
+        case 3: // УРОВЕНЬ БОЛОТО
+            storyDiv.style.backgroundImage = "url('img/backs/story2.jpg')";
+            storyDiv.innerHTML = "<br><br>Бубор все лето и осень усердно собирал орешки в лесу.<br>Завершив сбор орешков, Бубор сел на берег реки и с улыбкой посмотрел на свои труды.<br>Он знал, что сделал всё необходимое, чтобы его братья не голодали зимой.<br>Теперь можно приступать к следующей задаче: нам нужны дома, где будет уютно и тепло.<br>С утра пораньше Бубор отправился к болоту за поленьями и бревнами для новых бобриных хаток...";
+            nutImg.src = 'log.png';
+            groundImg.src = 'img/grounds/groundswamp.png';
+            wolfImg.src = 'img/char/crocicon.png';
+            collectiblesName = "Полешки: ";
+            backgroundMusic.pause();
+            backgroundMusic.src = "sounds/music-swamp.mp3";
+            break;
+
+        case 6: // УРОВЕНЬ ДЕРЕВНЯ
+            storyDiv.style.backgroundImage = "url('img/backs/story-village.jpg')";
+            storyDiv.innerHTML = "<br><br>Пройдя болото, Бубор отправился в дальнюю деревню,<br>где живут добродушные люди, готовые помочь собрать припасы на зиму.<br> Но местные жители предупреждают Бубора о крикливом петухе, который может помешать...";
+            nutImg.src = 'apple.png';
+            groundImg.src = 'img/grounds/groundvillage.png';
+            wolfImg.src = 'img/char/roostericon.png'; // Враг - пИтух
+            collectiblesName = "Яблоки: ";
+            backgroundMusic.pause(); // Останавливаем текущую музыку
+            backgroundMusic.src = "sounds/music-village.mp3";
+            break;
+
+        case 9: // УРОВЕНЬ ПЕЩЕРА
+            storyDiv.style.backgroundImage = "url('img/backs/story-cave.jpg')";
+            storyDiv.innerHTML = "<br><br>Неожиданно, Бубор проваливается под землю.<br>В подземном царстве полно опасностей<br>Зато здесь растут вкуснейшие пещерные грибы<br>В поисках выхода из пещер, наш Бубор решает собрать несколько грибочков на зиму...";
+            nutImg.src = 'mushroom.png';
+            groundImg.src = 'img/grounds/groundcave.png';
+            wolfImg.src = 'img/char/spidericon.png'; // Враг - паВук
+            collectiblesName = "Грибы: ";
+            backgroundMusic.pause(); // Останавливаем текущую музыку
+            backgroundMusic.src = "sounds/music-cave.mp3";
+            break;
+
+        case 12: // УРОВЕНЬ САВАННА
+            storyDiv.style.backgroundImage = "url('img/backs/story-savanna.jpg')";
+            storyDiv.innerHTML = "<br><br>После долгого пути Бубор попадает в саванну,<br> где царит жара и царствуют дикие животные.<br> Что можно найти в этом жарком месте?";
+            nutImg.src = 'savannaplant.png';
+            groundImg.src = 'img/grounds/groundsavanna.png';
+            wolfImg.src = 'img/char/elefanticon.png'; // Враг - слон
+            collectiblesName = "Растения: ";
+            backgroundMusic.pause(); // Останавливаем текущую музыку
+            backgroundMusic.src = "sounds/music-savanna.mp3";
+            break;
+
+        case 15: // УРОВЕНЬ ПУСТЫНЯ
+            storyDiv.style.backgroundImage = "url('img/backs/story-desert.jpg')";
+            storyDiv.innerHTML = "<br><br>В поисках редких минералов и плодов кактусов бобр отправляется в пустыню.<br>Здесь жарко и сухо, но он полон решимости<br>собрать необычные предметы для пополнения своих запасов";
+            nutImg.src = 'cactus.png';
+            groundImg.src = 'img/grounds/grounddesert.png';
+            wolfImg.src = 'img/char/lizicon.png'; // Изображение ящера
+            collectiblesName = "Кактусов: ";
+            backgroundMusic.pause(); // Останавливаем текущую музыку
+            backgroundMusic.src = "sounds/music3.mp3";
+            break;
+
+        case 18: // УРОВЕНЬ ГОРЫ
+            storyDiv.style.backgroundImage = "url('img/backs/story-mountains.jpg')";
+            storyDiv.innerHTML = "<br><br>Наш Бобр отправился в горы,<br>чтобы найти крепкие камни и травы для укрепления хаток.<br>Здесь его ждут новые испытания — скалистые тропы и обрывы, и горный козлик";
+            nutImg.src = 'stone.png';
+            groundImg.src = 'img/grounds/groundmountains.png';
+            wolfImg.src = 'img/char/goaticon.png'; // Изображение козла
+            collectiblesName = "Камней: ";
+            backgroundMusic.pause(); // Останавливаем текущую музыку
+            backgroundMusic.src = "sounds/music-mountains.mp3";
+            break;
+
+        case 21: // УРОВЕНЬ РУИНЫ
+            storyDiv.style.backgroundImage = "url('img/backs/story-ruins.jpg')";
+            storyDiv.innerHTML = "<br><br>Бубор натыкается на древние руины, полные загадок и тайн.<br>Легенда гласит, что здесь сокрыты сокровища и артефакты древней цивилизации.<br>Но духи прошлого охраняют руины, и их можно потревожить, если не быть осторожным.";
+            nutImg.src = 'artifact.png';
+            groundImg.src = 'img/grounds/groundruins.png';
+            wolfImg.src = 'img/char/skeltionicon.png'; // Изображение скелета
+            collectiblesName = "Артефакты: ";
+            backgroundMusic.pause(); // Останавливаем текущую музыку
+            backgroundMusic.src = "sounds/music-ruins.mp3";
+            break;
+
+        case 24: // УРОВЕНЬ ПОЖАР
+            storyDiv.style.backgroundImage = "url('img/backs/story-fire.jpg')";
+            storyDiv.innerHTML = "<br><br>Внезапно, Бубор попадает в лес, охваченный огнём.<br>Местные жители просят его помочь собрать последние уцелевшие ягоды и травы,<br>прежде чем огонь уничтожит всё вокруг.";
+            nutImg.src = 'stone.png';
+            groundImg.src = 'img/grounds/groundmountains.png';
+            wolfImg.src = 'img/char/phoenixicon.png'; // Изображение феникса
+            collectiblesName = "Камней: ";
+            backgroundMusic.pause(); // Останавливаем текущую музыку
+            backgroundMusic.src = "sounds/music-fire.mp3";
+            break;
+
+        case 27: // УРОВЕНЬ ВУЛКАН
+            storyDiv.style.backgroundImage = "url('img/backs/story-volcano.jpg')";
+            storyDiv.innerHTML = "<br><br>Услышав о лавовых кристаллах, которые дарят силу,<br>Бубор решает рискнуть и отправиться к вулкану.<br>Здесь горячий воздух и магма, но бобр знает,<br> что кристалы помогут холодной зимой.";
+            nutImg.src = 'volcrystal.png';
+            groundImg.src = 'img/grounds/groundvolcano.png';
+            wolfImg.src = 'img/char/phoenixicon.png'; // Изображение феникса
+            collectiblesName = "Кристалов: ";
+            backgroundMusic.pause(); // Останавливаем текущую музыку
+            backgroundMusic.src = "sounds/music-volcano.mp3";
+            break;
+
+        case 30: // УРОВЕНЬ ПИРАТСКИЙ ОСТРОВ
+            storyDiv.style.backgroundImage = "url('img/backs/story-pirates.jpg')";
+            storyDiv.innerHTML = "<br><br>Судьба забрасывает Бубора на пиратский остров,<br>полный тайн и золота.<br>По легендам, здесь зарыты бесчисленные сокровища, но пираты стерегут каждый уголок острова.";
+            nutImg.src = 'treasure.png';
+            groundImg.src = 'img/grounds/groundvillage.png';
+            wolfImg.src = 'img/char/skeltionicon.png'; // Изображение скелета
+            collectiblesName = "Сокровища: ";
+            backgroundMusic.pause(); // Останавливаем текущую музыку
+            backgroundMusic.src = "sounds/music-pirates.mp3";
+            break;
+
+        case 33: // УРОВЕНЬ СНЕГА
+            storyDiv.style.backgroundImage = "url('img/backs/story3.jpg')";
+            storyDiv.innerHTML = "<br><br>Теперь Бубор не только собрал орешки для братьев,<br>но и накопил достаточно материалов для строительства уютных хаток.<br>Но на этом забота Бубора не закончилась.<br>Он решил, что раз уже всё готово к зиме, можно устроить праздник для братьев.<br>И что может быть лучше, чем пир с сочными зимними ягодами?";
+            nutImg.src = 'raspberry.png';
+            groundImg.src = 'img/grounds/groundice.png';
+            wolfImg.src = 'img/char/wolficon.png'; // Изображение волка
+            collectiblesName = "Ягодок: ";
+            backgroundMusic.pause(); // Останавливаем текущую музыку
+            backgroundMusic.src = "sounds/music-ice.mp3";
+            break;
+
+        default:
+            return;
+    }
+
+    // Устанавливаем стиль и отображаем storyDiv
+    storyDiv.style.textAlign = "left";
+    storyDiv.style.fontFamily = "'Comic Sans MS', cursive, sans-serif";
+    storyDiv.style.color = "#d6ff00";
+    storyDiv.style.fontSize = "32px";
+    storyDiv.style.textShadow = "2px 2px 4px rgba(0, 0, 0, 0.7)";
+    storyDiv.style.display = "flex";
+
+    // Запускаем музыку и устанавливаем таймер на 8 секунд для скрытия storyDiv
+    backgroundMusic.load();
+    backgroundMusic.play();
+    setTimeout(() => {
+        storyDiv.style.display = "none"; // Скрываем storyDiv
+        isPaused = false; // Снимаем паузу
+        resetLevel(); // Запускаем следующий уровень
+    }, 11000); // 11 секунд для показа storyDiv
+}
+
+function DrawHUD() {
+    // Выводим номер уровня на экран
+    ctx.fillStyle = "gold";
+    ctx.font = "bold 40px 'Comic Sans MS', cursive";
+    ctx.textShadow = "2px 2px 4px rgba(0, 0, 0, 0.5)";
+    ctx.textAlign = "center";
+    ctx.strokeText("Уровень " + level, canvas.width / 2 + 10, 50); // Рисуем тень
+    ctx.fillText("Уровень " + level, canvas.width / 2 + 10, 50);
+
+    // Выводим жизни на экран
+    ctx.fillStyle = "#ff00e9";
+    ctx.font = "bold 45px Comic Sans MS";
+    ctx.textAlign = "center";
+    const heartSymbol = "♥"; // Символ сердечка
+    const heartCount = lives; // Количество жизней
+    const spacing = 40; // Отступ между сердечками
+    for (let i = 0; i < heartCount; i++) {
+        ctx.fillText(heartSymbol, canvas.width / 2 + i * spacing, 90); // Отображаем сердечки с отступом
+    }
+
+    // Отображение очков
+    ctx.fillStyle = "gold";
+    ctx.font = "bold 28px 'Comic Sans MS', cursive";
+    ctx.textAlign = "center";
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "#330066"; // Тёмно-фиолетовая обводка
+    ctx.strokeText(score + " боброчков", canvas.width / 2 + 100, 120); // Рисуем тень
+    ctx.fillText(score + " боброчков", canvas.width / 2 + 100, 120);
+
+
+    // Выводим количество орешков на экран
+    ctx.font = "bold 40px 'Comic Sans MS', cursive";
+    ctx.fillStyle = "#00ccff"; // Ярко-голубой цвет для текста
+    ctx.textAlign = "left";
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "#330066"; // Тёмно-фиолетовая обводка
+    ctx.strokeText(collectiblesName + collectedNuts + " / " + totalNuts, 10, 60); // Рисуем тень
+    ctx.fillText(collectiblesName + collectedNuts + " / " + totalNuts, 10, 60);
+
+    // Добавляем обработчик кликов на канвас
+    canvas.addEventListener("click", function (event) {
+        // Получаем координаты клика
+        let rect = canvas.getBoundingClientRect();
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+    });
+
+    // Отображение таймера с мультяшным дизайном
+    ctx.font = "bold 40px 'Comic Sans MS', cursive";
+    ctx.fillStyle = "#00ccff"; // Ярко-голубой цвет для текста
+    ctx.textAlign = "right";
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "#330066"; // Тёмно-фиолетовая обводка
+    ctx.strokeText("◷ " + timeLeft, canvas.width - 150, 60); // Рисуем тень
+    ctx.fillText("◷ " + timeLeft, canvas.width - 150, 60); // Рисуем основной текст
+}
+
+// Функция для отображения экрана победы
+function showVictoryScreen() {
+    isPaused = true;
+    document.getElementById("victory").style.display = "block";
+    victory.style.backgroundImage = "url('img/backs/story4.jpg')";
+    document.querySelector("#victory h1").innerHTML = "Ура! Это победа!";
+    document.querySelector("#victory p").innerHTML = `
+        Спасибо за игру, уважаемый друг!<br>Когда Бубор вернулся домой с корзиной малины, его братья, Бобер и Бибор, уже ждали его возле новых уютных хаток.<br>
+        Улыбки озаряли их лица, а в воздухе витало чувство тепла и благодарности.<br>Бубор поставил корзину на стол, и все вместе они устроили маленький пир.<br><br><br><br><br>
+        Праздник продолжался до позднего вечера. Зима могла быть суровой,<br>но у них теперь было всё, чтобы преодолеть любые трудности вместе.<br> А волк ... убежал в другой лес.
+    `;
+
+    // Остановка текущей музыки и проигрывание музыки победы
+    let backgroundMusic = document.getElementById("backgroundMusic");
+    backgroundMusic.pause();
+    backgroundMusic.currentTime = 0;
+    victoryMusic = new Audio('sounds/bubor.mp3');
+    victoryMusic.play();
+}
+

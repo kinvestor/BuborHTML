@@ -1,0 +1,343 @@
+        /* Стили для предыстории */
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+
+        #story {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-image: url('img/backs/story.jpg');
+            /* Фоновое изображение */
+            background-size: cover;
+            /* Обрезка или растягивание под размер экрана */
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 2;
+        }
+
+        #story-text {
+            width: 60%;
+            font-size: 24px;
+            line-height: 1.5;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 10s ease-out forwards, moveUp 35s ease-out forwards;
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Темный фон под текстом для улучшения читаемости */
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes moveUp {
+            0% {
+                transform: translateY(100%);
+            }
+
+            100% {
+                transform: translateY(-100%);
+            }
+        }
+
+        @keyframes zoomEffect {
+            0% {
+                background-size: 100%;
+                background-position: center;
+            }
+
+            50% {
+                background-size: 105%;
+                background-position: center 10px;
+            }
+
+            100% {
+                background-size: 100%;
+                background-position: center -10px;
+            }
+        }
+
+        .cartoon-button {
+            background-color: #ffcc00;
+            /* Яркий фон */
+            color: #fff;
+            /* Цвет текста */
+            font-size: 24px;
+            /* Размер шрифта */
+            padding: 15px 30px;
+            /* Отступы */
+            border: none;
+            /* Убираем границы */
+            border-radius: 25px;
+            /* Закругленные углы */
+            cursor: pointer;
+            /* Указатель при наведении */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            /* Тень */
+            transition: transform 0.2s;
+            /* Плавный эффект при наведении */
+        }
+
+        .cartoon-button:hover {
+            transform: scale(1.1);
+            /* Увеличение при наведении */
+        }
+
+        .cartoon-button:active {
+            transform: scale(0.95);
+            /* Уменьшение при нажатии */
+        }
+
+
+        #start-game {
+            display: block;
+            /* Кнопка видна с самого начала */
+            animation: fadeIn 3s ease-out forwards;
+            position: absolute;
+            bottom: 150px;
+            /* Подняли кнопку выше */
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 20px 40px;
+            background: linear-gradient(135deg, #ffcc33, #ff9900);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 30px;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            text-shadow: 2px 2px #333;
+            cursor: pointer;
+            z-index: 3;
+            transition: transform 0.3s, background 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        #start-game:hover {
+            background: linear-gradient(135deg, #ff9900, #ffcc33);
+            transform: translateX(-50%) scale(1.1);
+            /* Увеличение при наведении */
+        }
+
+        #start-game:active {
+            transform: translateX(-50%) scale(0.95);
+            /* Эффект нажатия */
+        }
+
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #gameOver,
+        #nextLevel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 68px;
+            color: #d6ff00;
+            display: none;
+            text-align: center;
+            text-shadow: #002eff 1px 0 10px;
+        }
+
+        #countdown {
+            font-size: 60px;
+            color: #d6ff00;
+            text-shadow: red 1px 0 10px;
+            position: absolute;
+            top: 65%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+
+        /* Стиль для контейнера кнопки */
+        #musicButton,
+        #pauseButton {
+            position: fixed;
+            top: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background-color: #f1f1f1;
+            border: 2px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        /* Кнопка музыки справа */
+        #musicButton {
+            right: 20px;
+        }
+
+        /* Кнопка паузы слева от кнопки музыки */
+        #pauseButton {
+            right: 80px;
+            /* Чуть левее кнопки музыки */
+        }
+
+        #musicButton:hover,
+        #pauseButton:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Стиль для иконки */
+        #musicIcon,
+        #pauseIcon {
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: filter 0.3s;
+        }
+
+        /* Черно-белый стиль для иконки при выключении звука */
+        .muted {
+            filter: grayscale(100%);
+        }
+
+        /* Стиль окна с очками (конец уровня) */
+        #resultScreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            font-family: 'Comic Sans MS', cursive;
+            display: flex;
+            align-items: flex-start;
+            /* Выровняем по верху */
+            justify-content: center;
+            color: #f9ff00;
+            pointer-events: none;
+            /* Убираем блокировку взаимодействий */
+        }
+
+        #resultContent {
+            display: none;
+            padding: 20px 40px;
+            /* Уменьшаем высоту */
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+            width: 35%;
+            background-color: rgba(0, 0, 0, 0.6);
+            margin-top: 10%;
+            margin-left: -40%;
+            pointer-events: auto;
+            /* Включаем взаимодействие, когда оно отображается */
+        }
+
+        #resultMessage {
+            font-size: 30px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+        }
+
+        .result-excellent #resultContent {
+            background-color: rgba(76, 175, 80, 0.8);
+            /* Полупрозрачный зелёный */
+        }
+
+        .result-good #resultContent {
+            background-color: rgba(255, 215, 0, 0.8);
+            /* Полупрозрачный золотой */
+        }
+
+        .result-average #resultContent {
+            background-color: rgba(255, 99, 71, 0.8);
+            /* Полупрозрачный красноватый */
+        }
+
+
+        #upgradesMenu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-family: 'Comic Sans MS', cursive;
+            text-align: center;
+            padding-top: 50px;
+            z-index: 1000;
+        }
+
+        #upgradeTabs button {
+            font-size: 18px;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .upgradeTab {
+            margin-top: -20px;
+            font-size: 18px;
+        }
+
+        #homeTab {
+            background-image: url('img/home/base.jpg');
+            background-size: cover;
+            background-position: center;
+            padding: 20px;
+            color: #fff;
+            transition: opacity 0.5s ease;
+            /* Переход для плавного изменения прозрачности */
+            height: 70%;
+            border-style: double;
+            border-color: darkorange;
+        }
+
+
+        .home-improvements {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .improvement-item {
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .improvement-item button {
+            font-size: 18px;
+            padding: 5px 15px;
+            background-color: #FFD700;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }

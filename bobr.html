@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра про Бобра</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="functions.js"></script>
+    <script src="jump-effects.js"></script>
+    <script src="mini-games.js"></script>
+</head>
+
+<body>
+
+    <!-- ============================================================
+         МЕНЮ ПРОФИЛЕЙ (показывается при старте, если есть профили)
+         ============================================================ -->
+    <div id="profileMenu">
+        <div id="profileMenuContent">
+            <h1>🌲 Приключения Бубора 🌲</h1>
+            <p class="menu-subtitle">Выбери или создай профиль</p>
+            
+            <div id="profileList"></div>
+            
+            <button class="menu-button menu-btn-primary" onclick="showCreateProfile()">➕ Создать профиль</button>
+            <button class="menu-button menu-btn-secondary" onclick="showDeleteProfiles()">🗑️ Удалить профиль</button>
+            
+            <div id="profileCreateForm" style="display:none; margin-top: 20px;">
+                <input type="text" id="newProfileName" placeholder="Введи имя бобра..." 
+                       style="padding: 10px; font-size: 20px; border-radius: 8px; border: 2px solid #FFD700; background: #333; color: #fff; text-align: center;">
+                <br><br>
+                <button class="menu-button menu-btn-primary" onclick="createProfile()">✅ Создать</button>
+                <button class="menu-button menu-btn-secondary" onclick="hideCreateProfile()">❌ Отмена</button>
+            </div>
+
+            <div id="profileDeleteForm" style="display:none; margin-top: 20px; color: #ff6b6b;">
+                <p style="font-size: 18px;">Выбери профиль для удаления:</p>
+                <div id="profileDeleteList"></div>
+                <br>
+                <button class="menu-button menu-btn-secondary" onclick="hideDeleteProfiles()">❌ Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         СТАРТОВОЕ МЕНЮ (дизайн: боковая панель + фоновое изображение)
+         ============================================================ -->
+    <div id="mainMenu" style="display:none;">
+        <div id="menuContainer">
+            <!-- Левая боковая панель -->
+            <aside id="menuSidebar">
+                <div id="menuSidebarInner">
+                    <!-- Заголовок -->
+                    <div class="menu-header">
+                        <h1 onclick="onTitleClick()">🌲 Приключения<br><span>Бубора</span></h1>
+                    </div>
+                    
+                    <div id="profileIndicator" style="text-align:center;margin-bottom:8px;font-size:14px;color:#fbbf24;"></div>
+                    
+                    <!-- Герой-кнопка Новая игра -->
+                    <button class="menu-btn-primary" onclick="startGame()">
+                        <span>🚀 Играть</span>
+                        <span class="btn-play-icon">▶</span>
+                    </button>
+                    
+                    <!-- Список кнопок меню -->
+                    <nav class="menu-nav">
+                        <button class="menu-btn-nav" onclick="showLevelMap(false)">
+                            <span class="nav-icon" style="background:#fbbf24;color:#78350f;">🗺️</span>
+                            <span>Карта уровней</span>
+                        </button>
+                        <button class="menu-btn-nav" onclick="showAchievementsMenu()">
+                            <span class="nav-icon" style="background:#34d399;color:#064e3b;">🏆</span>
+                            <span>Ачивки</span>
+                        </button>
+                        <button class="menu-btn-nav" onclick="showLeaderboard()">
+                            <span class="nav-icon" style="background:#60a5fa;color:#1e3a5f;">👑</span>
+                            <span>Лидеры</span>
+                        </button>
+                        <button class="menu-btn-nav" onclick="showDailyChallengesMenu()">
+                            <span class="nav-icon" style="background:#a78bfa;color:#2e1065;">📅</span>
+                            <span>Задания дня</span>
+                        </button>
+                        <button class="menu-btn-nav" onclick="loadProgress()">
+                            <span class="nav-icon" style="background:#fbbf24;color:#78350f;">📂</span>
+                            <span>Загрузить игру</span>
+                        </button>
+                        <button class="menu-btn-nav" onclick="showStory()">
+                            <span class="nav-icon" style="background:#34d399;color:#064e3b;">📖</span>
+                            <span>Предыстория</span>
+                        </button>
+                        <button class="menu-btn-nav" onclick="showProfileStats()">
+                            <span class="nav-icon" style="background:#60a5fa;color:#1e3a5f;">📊</span>
+                            <span>Статистика</span>
+                        </button>
+                    </nav>
+                    
+                    <!-- Нижняя часть: профиль + настройки -->
+                    <div class="menu-footer">
+                        <button class="menu-btn-profile" onclick="switchProfile()">
+                            <span class="profile-avatar">🐹</span>
+                            <div class="profile-info">
+                                <span class="profile-name" id="menuProfileName">Бубор</span>
+                                <div class="profile-badges">
+                                    <span class="badge-lvl" id="menuProfileLevel">LVL 1</span>
+                                    <span class="badge-score" id="menuProfileScore">⭐ 0</span>
+                                </div>
+                            </div>
+                        </button>
+                        <button class="menu-btn-settings" onclick="showSettingsMenu()" title="Настройки">
+                            ⚙️
+                        </button>
+                    </div>
+                </div>
+            </aside>
+            
+            <!-- Правая часть: фоновое изображение + золотая пыль -->
+            <main id="menuBg">
+                <img src="img/backs/back_menu01.jpg" alt="Фон">
+                <div class="menu-bg-overlay"></div>
+                
+                <!-- Золотые частицы (sparkle dust) -->
+                <div class="sparkle-particle p1"></div>
+                <div class="sparkle-particle p2"></div>
+                <div class="sparkle-particle p3"></div>
+                <div class="sparkle-particle p4"></div>
+                <div class="sparkle-particle p5"></div>
+                <div class="sparkle-particle p6"></div>
+                <div class="sparkle-particle p7"></div>
+                <div class="sparkle-particle p8"></div>
+                <div class="sparkle-particle p9"></div>
+                <div class="sparkle-particle p10"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         СЮЖЕТНЫЙ ЭКРАН (Story Overlay) — переработанный
+         ============================================================ -->
+    <div id="story">
+        <div id="story-text">
+            Жили-были три брата-бобра: Бобир, Бибор и Бубор...
+            <br><br>
+            <button class="story-continue-btn" onclick="skipStory()">▶ Продолжить</button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         КНОПКИ УПРАВЛЕНИЯ (музыка, пауза)
+         ============================================================ -->
+    <div id="musicButton">
+        <div id="musicIcon">🔊</div>
+    </div>
+
+    <div id="pauseButton">
+        <div id="pauseIcon">⏸</div>
+    </div>
+
+    <!-- ============================================================
+         ЭКРАН ПАУЗЫ
+         ============================================================ -->
+    <div id="pauseScreen">
+        <h2>⏸ Пауза</h2>
+        <div class="pause-btn-group">
+            <button class="pause-btn pause-btn-resume" onclick="togglePause()">▶ Продолжить игру</button>
+            <button class="pause-btn pause-btn-save" onclick="saveProgress()">💾 Сохранить</button>
+            <button class="pause-btn pause-btn-load" onclick="loadProgress()">📂 Загрузить</button>
+            <button class="pause-btn pause-btn-upgrades" onclick="openUpgradesMenu()">⚡ Улучшения</button>
+            <button class="pause-btn pause-btn-map" onclick="showLevelMapFromPause()">🗺️ Карта уровней</button>
+            <button class="pause-btn pause-btn-home" onclick="goToMainMenu()">🏠 Главное меню</button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         МЕНЮ УЛУЧШЕНИЙ
+         ============================================================ -->
+    <div id="upgradesMenu">
+        <div id="upgradesMenuHeader">
+            <button onclick="closeUpgradesMenu()" id="upgradesBackBtn">← Назад</button>
+            <h2>⭐ Улучшения</h2>
+        </div>
+
+        <div id="upgradeTabsBar">
+            <button onclick="showTab('bonuses')" class="upgrade-tab-btn">🎁 Бонусы</button>
+            <button onclick="showTab('skins')" class="upgrade-tab-btn">🎭 Скины</button>
+            <button onclick="showTab('home')" class="upgrade-tab-btn">🏡 Домик</button>
+        </div>
+
+        <div id="upgradeTabsContent">
+            <div id="bonusesTab" class="upgradeTab" style="display: none;">
+                <h3>Бонусы для Бобра</h3>
+                <button onclick="buyBonus('extraLife', 100)" class="upgrade-btn">❤️ Дополнительная жизнь — 100 очков</button>
+                <button onclick="buyBonus('magnet', 150)" class="upgrade-btn">🧲 Магнит для орешков — 150 очков</button>
+                <button onclick="buyBonus('doubleJump', 200)" class="upgrade-btn">🦘 Двойной прыжок — 200 очков</button>
+            </div>
+            <div id="skinsTab" class="upgradeTab" style="display: none;">
+                <h3>🎨 Магазин скинов</h3>
+                <p style="color:#ccc; font-size:14px; margin-top:-10px; margin-bottom:15px;">
+                    Скины покупаются за боброчки и открываются по мере получения званий.
+                </p>
+                <div id="skinsContainer" class="skins-container"></div>
+            </div>
+            <div id="homeTab" class="upgradeTab" style="display: none;">
+                <!-- Содержимое генерируется динамически через renderHomeTab() -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         КАРТА УРОВНЕЙ
+         ============================================================ -->
+    <div id="levelMap">
+        <button onclick="closeLevelMap()" style="
+        position: absolute; top: 20px; right: 20px; padding: 10px 20px;
+        background-color: #FFD700; color: #333; font-size: 18px;
+        border: none; border-radius: 8px; cursor: pointer;
+        z-index: 10;">
+            ← Назад
+        </button>
+        <h2>🗺️ Карта приключений Бубора</h2>
+        <p style="color:#ccc;font-size:16px;margin-top:-10px;margin-bottom:20px;" id="levelMapProgress">Уровень: 1 / 48</p>
+        <div id="levelMapContainer"></div>
+    </div>
+
+    <!-- ============================================================
+         ЭКРАН РЕЗУЛЬТАТОВ УРОВНЯ
+         ============================================================ -->
+    <div id="resultScreen">
+        <div id="resultContent">
+            <p id="resultMessage"></p>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         ЭКРАН ПОРАЖЕНИЯ / ПОБЕДЫ
+         ============================================================ -->
+    <div id="victory">
+        <h1 style="color: #FFD700; font-size: 54px; text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7); text-align: left; margin-left: 5%;">
+            Ура! Ты победил!
+        </h1>
+
+        <p style="font-size: 22px; padding-right: 20%; text-align: left; margin-left: 5%; margin-right: 5%; line-height: 1.6; text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);">
+            Спасибо за игру, уважаемый друг!<br>Когда Бубор вернулся домой с корзиной малины, его братья, Бобер и Бибор,
+            уже ждали его возле новых уютных хаток.<br>Улыбки озаряли их лица, а в воздухе витало чувство тепла и
+            благодарности.<br>Бубор поставил корзину на стол, и все вместе они устроили маленький пир.
+            <br><br><br><br>
+            Праздник продолжался до позднего вечера. Зима могла быть суровой,<br>но у них теперь было всё, чтобы
+            преодолеть любые трудности вместе.<br>А волк ... убежал в другой лес.
+        </p>
+
+        <button class="cartoon-button"
+            style="margin-top: 30px; margin-left: 15%; padding: 15px 30px; font-size: 22px; background-color: #FFD700; border: none; border-radius: 10px; color: #333; cursor: pointer; box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5);"
+            onclick="restartGame()">🔄 Играть снова</button>
+            
+        <button class="cartoon-button"
+            style="margin-top: 30px; margin-left: 15%; padding: 15px 30px; font-size: 22px; background-color: #666; border: none; border-radius: 10px; color: #fff; cursor: pointer; box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5);"
+            onclick="goToMainMenu()">🏠 Главное меню</button>
+    </div>
+
+    <!-- ============================================================
+         ТАЙМЕР ОБРАТНОГО ОТСЧЁТА
+         ============================================================ -->
+    <div id="countdown"></div>
+
+    <!-- ============================================================
+         ТУТОРИАЛ (обучающие подсказки)
+         ============================================================ -->
+    <div id="tutorialOverlay">
+        <div class="tutorial-backdrop"></div>
+        <div class="tutorial-highlight" style="display:none;"></div>
+        <div class="tutorial-tooltip" style="display:none;"></div>
+        <div class="tutorial-arrow" style="display:none;">⬇</div>
+        <button class="tutorial-skip-btn" onclick="skipTutorial()">✕ Пропустить обучение</button>
+    </div>
+
+    <!-- ============================================================
+         ПЛАВНЫЙ ПЕРЕХОД МЕЖДУ УРОВНЯМИ
+         ============================================================ -->
+    <div id="levelTransition" class="level-transition"></div>
+
+    <!-- ============================================================
+         GAME OVER
+         ============================================================ -->
+    <div id="gameOver">⏰ Время вышло! Попробуй ещё раз!</div>
+
+    <!-- ============================================================
+         МОБИЛЬНЫЕ КНОПКИ УПРАВЛЕНИЯ
+         ============================================================ -->
+    <div id="mobileControls">
+        <div id="mobileLeft" class="mobile-btn">◀</div>
+        <div id="mobileRight" class="mobile-btn">▶</div>
+        <div id="mobileJump" class="mobile-btn">▲</div>
+    </div>
+
+    <!-- ============================================================
+         УВЕДОМЛЕНИЕ ОБ АЧИВКЕ
+         ============================================================ -->
+    <div id="achievementPopup"></div>
+
+    <!-- ============================================================
+         МЕНЮ АЧИВОК
+         ============================================================ -->
+    <div id="achievementsMenu">
+        <button onclick="closeAchievementsMenu()" style="
+        position: absolute; top: 20px; right: 20px; padding: 10px 20px;
+        background-color: #FFD700; color: #333; font-size: 18px;
+        border: none; border-radius: 8px; cursor: pointer;">
+            ← Назад
+        </button>
+        <h2>🏆 Все ачивки</h2>
+        <p style="color:#ccc;font-size:16px;margin-top:-10px;" id="achievementProgress">Получено: 0 / 25</p>
+        <div id="achievementsList"></div>
+    </div>
+
+    <!-- ============================================================
+         МЕНЮ НАСТРОЕК
+         ============================================================ -->
+    <div id="settingsMenu" style="display:none;">
+        <button onclick="closeSettingsMenu()" style="
+        position: absolute; top: 20px; right: 20px; padding: 10px 20px;
+        background-color: #FFD700; color: #333; font-size: 18px;
+        border: none; border-radius: 8px; cursor: pointer;">
+            ← Назад
+        </button>
+        <h2>⚙️ Настройки</h2>
+        <div class="settings-container">
+            <div class="setting-item">
+                <label>🎵 Громкость музыки</label>
+                <input type="range" id="musicVolume" min="0" max="100" value="80" oninput="setMusicVolume(this.value)">
+                <span id="musicVolumeLabel">80%</span>
+            </div>
+            <div class="setting-item">
+                <label>🔊 Громкость звуков</label>
+                <input type="range" id="sfxVolume" min="0" max="100" value="100" oninput="setSfxVolume(this.value)">
+                <span id="sfxVolumeLabel">100%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+          HUD ПОВЕРХ ИГРЫ
+          ============================================================ -->
+    <div id="gameHud"></div>
+
+    <!-- ============================================================
+          ПЛАВАЮЩИЕ ЧАСТИЦЫ НА ФОНЕ МЕНЮ
+          ============================================================ -->
+    <div id="floatingParticles"></div>
+
+    <!-- ============================================================
+          КОНФЕТТИ ПРИ ПОБЕДЕ
+          ============================================================ -->
+    <div id="confettiContainer"></div>
+
+    <!-- ============================================================
+          КАНВАС ИГРЫ
+          ============================================================ -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- ============================================================
+         АУДИО
+         ============================================================ -->
+    <audio id="backgroundMusic" loop>
+        <source src="sounds/music1.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="comboSound" preload="auto">
+        <source src="sounds/eat.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="comboBreakSound" preload="auto">
+        <source src="sounds/notready.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- ============================================================
+         СКРИПТ ИНИЦИАЛИЗАЦИИ
+         ============================================================ -->
+    <script>
+        // Инициализация игры при загрузке страницы
+        window.onload = function () {
+            // Показываем меню профилей (или главное меню, если профиль есть)
+            document.getElementById('profileMenu').style.display = 'flex';
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('story').style.display = 'none';
+            document.getElementById('gameCanvas').style.display = 'block';
+            
+            // Загружаем профили
+            loadProfiles();
+            
+            // Инициализируем канвас и игровой цикл
+            initAndStart();
+            
+            // Начинаем музыку по первому клику
+            const bgMusic = document.getElementById('backgroundMusic');
+            bgMusic.play().catch(() => {});
+        };
+
+        // Функция для показа предыстории
+        function showStory() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('story').style.display = 'flex';
+            // Показываем кнопку продолжения
+            const storyText = document.getElementById('story-text');
+            if (storyText && !storyText.querySelector('.story-continue-btn')) {
+                const btn = document.createElement('button');
+                btn.className = 'story-continue-btn';
+                btn.textContent = '▶ Продолжить';
+                btn.onclick = function() { skipStory(); };
+                storyText.appendChild(document.createElement('br'));
+                storyText.appendChild(document.createElement('br'));
+                storyText.appendChild(btn);
+            }
+        }
+
+        // Новая функция пропуска истории
+        function skipStory() {
+            gameState.isStorySkippable = false;
+            const storyDiv = document.getElementById('story');
+            storyDiv.style.display = 'none';
+            storyDiv.style.cursor = 'default';
+            gameState.isPaused = false;
+            // Удаляем обработчик клика, если был
+            const newDiv = storyDiv.cloneNode(true);
+            storyDiv.parentNode.replaceChild(newDiv, storyDiv);
+            // Если игра не запущена, показываем меню
+            if (!gameState.isGameStarted) {
+                document.getElementById('mainMenu').style.display = 'flex';
+            }
+        }
+
+        // Функция возврата в главное меню
+        function goToMainMenu() {
+            gameState.isGameStarted = false;
+            gameState.isPaused = true;
+            
+            document.getElementById('pauseScreen').style.display = 'none';
+            document.getElementById('upgradesMenu').style.display = 'none';
+            document.getElementById('levelMap').style.display = 'none';
+            document.getElementById('victory').style.display = 'none';
+            document.getElementById('resultScreen').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'flex';
+            document.getElementById('story').style.display = 'none';
+            
+            const bgMusic = document.getElementById('backgroundMusic');
+            if (bgMusic) bgMusic.pause();
+        }
+
+        // Переключение вкладок главного меню
+        function switchMenuTab(tab) {
+            // Обновляем активную вкладку
+            document.querySelectorAll('.menu-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.tab === tab);
+            });
+            // Показываем нужный контент
+            document.querySelectorAll('.menu-tab-content').forEach(c => {
+                c.classList.remove('active');
+            });
+            const target = document.getElementById('menuTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if (target) {
+                target.classList.add('active');
+            }
+        }
+
+        // Глобальный звук клика для всех кнопок меню + запрос полноэкранного режима
+        let fullscreenRequested = false;
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('button');
+            if (btn && typeof selectSound !== 'undefined') {
+                selectSound.play();
+            }
+            // Запрашиваем полноэкранный режим при первом клике
+            if (!fullscreenRequested) {
+                fullscreenRequested = true;
+                goFullscreen();
+            }
+        });
+
+        // Обработчики кнопок
+        document.getElementById('pauseButton').addEventListener('click', function () {
+            if (gameState.isGameStarted) togglePause();
+        });
+
+        document.getElementById('musicButton').addEventListener('click', function () {
+            const bgMusic = document.getElementById('backgroundMusic');
+            const icon = document.getElementById('musicIcon');
+            if (bgMusic.paused) {
+                bgMusic.play();
+                icon.classList.remove('muted');
+            } else {
+                bgMusic.pause();
+                icon.classList.add('muted');
+            }
+        });
+    </script>
+
+</body>
+
+</html>

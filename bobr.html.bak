@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра про Бобра</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="functions.js"></script>
+</head>
+
+<body>
+
+    <div id="story" style="animation: zoomEffect 10s infinite alternate;">
+        <div id="story-text">
+            Жили-были три брата-бобра: Бобир, Бибор и Бубор. Каждый из них решил построить себе домик. Бобир был ленивым
+            и построил дом из соломы, Бибор тоже не старался и выбрал ветки, а вот Бубор, самый трудолюбивый и
+            ответственный, построил крепкий дом из кирпича.<br><br>
+
+            Однажды пришел злой волк и захотел съесть братьев. Он с легкостью разрушил соломенный дом Бобира и веточный
+            дом Бибора, и братья убежали к Бубору. Волк попытался разрушить кирпичный дом, но у него ничего не вышло —
+            дом Бубора оказался слишком крепким.<br><br>
+
+            После того как волк ушел, Бубор решил помочь братьям. Он отправился в лес искать материалы для строительства
+            новых, крепких домов для Бобира и Бибора и припасы на зиму, чтобы все могли жить в безопасности и не бояться
+            грядущих холодов.
+        </div>
+    </div>
+    <button id="start-game">Помочь Бубору</button>
+
+    <script>
+        const startButton = document.getElementById('start-game');
+        const storyDiv = document.getElementById('story');
+
+        // Клик по кнопке "Помочь бобру" запускает игру
+        startButton.addEventListener('click', () => {
+            isPaused = false; // Выключаем паузу
+            storyDiv.style.display = 'none';
+            startButton.style.display = 'none'; // Скрыть кнопку после нажатия
+        });
+
+        // Функция для переключения паузы
+        function togglePause() {
+            isPaused = !isPaused; // Переключаем состояние паузы
+            const pauseScreen = document.getElementById("pauseScreen");
+            const backgroundMusic = document.getElementById("backgroundMusic");
+
+            if (isPaused) {
+                pauseScreen.style.display = "flex"; // Показываем экран паузы
+                backgroundMusic.pause(); // Приостанавливаем фоновую музыку
+            } else {
+                pauseScreen.style.display = "none"; // Скрываем экран паузы
+                backgroundMusic.play(); // Возобновляем фоновую музыку
+            }
+        }
+    </script>
+
+
+    <!-- Кнопка для управления музыкой -->
+    <div id="musicButton">
+        <div id="musicIcon" style="background-image: url('mute.png');"></div>
+    </div>
+
+    <!-- Кнопка для паузы игры -->
+    <div id="pauseButton">
+        <div id="pauseIcon" style="background-image: url('pause.png');"></div>
+    </div>
+
+    <!-- Экран паузы с кнопками "Продолжить игру", "Сохранить" и "Загрузить" -->
+    <div id="pauseScreen" style="
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); color: white; font-size: 48px;
+    text-align: center; justify-content: center; align-items: center; z-index: 1000;
+    font-family: 'Comic Sans MS', cursive, sans-serif; flex-direction: column;">
+
+        <p>Пауза</p>
+        <button onclick="togglePause()" style="
+        margin-top: 20px; padding: 10px 20px; font-size: 24px;
+        background-color: #ffd700; border: none; border-radius: 8px; 
+        color: #333; cursor: pointer; font-family: 'Comic Sans MS', cursive, sans-serif;">
+            Продолжить игру
+        </button>
+
+        <button onclick="saveProgress()" style="
+        margin-top: 10px; padding: 10px 20px; font-size: 24px;
+        background-color: #4CAF50; border: none; border-radius: 8px;
+        color: #fff; cursor: pointer; font-family: 'Comic Sans MS', cursive, sans-serif;">
+            Сохранить
+        </button>
+
+        <button onclick="loadProgress()" style="
+        margin-top: 10px; padding: 10px 20px; font-size: 24px;
+        background-color: #2196F3; border: none; border-radius: 8px;
+        color: #fff; cursor: pointer; font-family: 'Comic Sans MS', cursive, sans-serif;">
+            Загрузить
+        </button>
+
+        <button onclick="openUpgradesMenu()" style="
+        margin-top: 10px; padding: 10px 20px; font-size: 24px;
+        background-color: #FF6347; border: none; border-radius: 8px;
+        color: #fff; cursor: pointer; font-family: 'Comic Sans MS', cursive, sans-serif;">
+            Улучшения
+        </button>
+    </div>
+
+    <!-- Интерфейс улучшений -->
+    <div id="upgradesMenu" style="
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.9); color: white; text-align: center;
+    z-index: 1001; font-family: 'Comic Sans MS', cursive, sans-serif; padding-top: 50px;">
+
+        <button onclick="closeUpgradesMenu()" style="
+        position: absolute; top: 20px; right: 20px; padding: 10px 20px;
+        background-color: #FFD700; color: #333; font-size: 18px;
+        border: none; border-radius: 8px; cursor: pointer;">
+            Назад
+        </button>
+
+        <h2>Улучшения</h2>
+
+        <!-- Вкладки с типами улучшений -->
+        <div id="upgradeTabs" style="margin-top: 20px;">
+            <button onclick="showTab('bonuses')" style="
+            font-size: 18px; padding: 10px 20px; margin: 10px; border: none; cursor: pointer;
+            border-radius: 8px;">Бонусы</button>
+            <button onclick="showTab('skins')" style="
+            font-size: 18px; padding: 10px 20px; margin: 10px; border: none; cursor: pointer;
+            border-radius: 8px;">Скины и анимации</button>
+            <button onclick="showTab('home')" style="
+            font-size: 18px; padding: 10px 20px; margin: 10px; border: none; cursor: pointer;
+            border-radius: 8px;">Домик</button>
+        </div>
+
+        <!-- Содержимое вкладок -->
+        <div id="bonusesTab" class="upgradeTab" style="display: none;">
+            <h3>Бонусы для Бобра</h3>
+            <button onclick="buyBonus('extraLife', 100)">Дополнительная жизнь — 100 очков</button>
+            <button onclick="buyBonus('magnet', 150)">Магнит для орешков — 150 очков</button>
+        </div>
+        <div id="skinsTab" class="upgradeTab" style="display: none;">
+            <h3>Скины и анимации</h3>
+            <button onclick="buySkin('hat', 200)">Шляпа — 200 очков</button>
+            <button onclick="buySkin('tailTrail', 250)">Огненный след — 250 очков</button>
+        </div>
+        <div id="homeTab" class="upgradeTab" style="display: none;">
+            <h3>Улучшение домика</h3>
+            <!-- Раздел с улучшениями для домика -->
+            <div class="home-improvements">
+                <div class="improvement-item">
+                    <p>Добавить кровать</p>
+                    <button onclick="buyHomeUpgrade('bed', 300)">Купить за 300 очков</button>
+                </div>
+                <div class="improvement-item">
+                    <p>Стол и стулья</p>
+                    <button onclick="buyHomeUpgrade('table', 250)">Купить за 250 очков</button>
+                </div>
+                <div class="improvement-item">
+                    <p>Лампа</p>
+                    <button onclick="buyHomeUpgrade('lamp', 150)">Купить за 150 очков</button>
+                </div>
+                <div class="improvement-item">
+                    <p>Плотина снаружи</p>
+                    <button onclick="buyHomeUpgrade('dam', 400)">Купить за 400 очков</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultScreen">
+        <div id="resultContent">
+            <p id="resultMessage"></p>
+        </div>
+    </div>
+
+    <!-- Аудио элемент -->
+    <audio id="backgroundMusic" loop>
+        <source src="sounds/music1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const musicButton = document.getElementById('musicButton');
+        const musicIcon = document.getElementById('musicIcon');
+        const backgroundMusic = document.getElementById('backgroundMusic');
+
+        // Функция для переключения музыки
+        function toggleMusic() {
+            if (backgroundMusic.paused) {
+                backgroundMusic.play(); // Включаем музыку
+                musicIcon.classList.remove('muted'); // Убираем черно-белый фильтр
+            } else {
+                backgroundMusic.pause(); // Останавливаем музыку
+                musicIcon.classList.add('muted'); // Применяем черно-белый фильтр
+            }
+        }
+
+        // Привязываем клик к кнопке паузы (убедимся, что событие обрабатывается)
+        document.getElementById('pauseButton').addEventListener('click', function () {
+            togglePause();
+        });
+
+        // Добавить обработчик нажатия на кнопку mute
+        musicButton.addEventListener('click', toggleMusic);
+
+        // Начальное воспроизведение после взаимодействия с пользователем
+        document.addEventListener('click', function () {
+            if (backgroundMusic.paused) {
+                backgroundMusic.play();
+                musicIcon.classList.remove('muted');
+            }
+        }, { once: true });
+
+        // Запуск музыки по умолчанию после первого взаимодействия
+        window.onload = function () {
+            backgroundMusic.play();
+            musicIcon.classList.remove('muted');
+        };
+    </script>
+
+
+    <canvas id="gameCanvas"></canvas>
+    <div id="gameOver">Бобер провалился! Попробуй ещё раз!</div>
+    <div id="victory"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('img/backs/story4.jpg'); background-size: cover; background-position: center; z-index: 1000; color: #f1ffe6; padding: 50px; animation: zoomEffect 10s infinite alternate;">
+        <h1
+            style="color: #FFD700; font-size: 54px; text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7); font-family: 'Comic Sans MS', cursive, sans-serif; text-align: left; margin-left: 5%;">
+            Ура! Ты победил!</h1>
+
+        <p
+            style="font-size: 22px; padding-right: 20%; text-align: left; margin-left: 5%; margin-right: 5%; line-height: 1.6; text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7); font-family: 'Comic Sans MS', cursive, sans-serif;">
+            Спасибо за игру, уважаемый друг!<br>Когда Бубор вернулся домой с корзиной малины, его братья, Бобер и Бибор,
+            уже ждали его возле новых уютных хаток.<br>Улыбки озаряли их лица, а в воздухе витало чувство тепла и
+            благодарности.<br>Бубор поставил корзину на стол, и все вместе они устроили маленький пир.
+            <br><br><br><br><br>
+            Праздник продолжался до позднего вечера. Зима могла быть суровой,<br>но у них теперь было всё, чтобы
+            преодолеть любые трудности вместе.<br> А волк ... убежал в другой лес.
+        </p>
+
+        <button class="cartoon-button"
+            style="margin-top: 30px; margin-left: 15%; padding: 15px 30px; font-size: 22px; background-color: #FFD700; border: none; border-radius: 10px; color: #333; cursor: pointer; box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5); font-family: 'Comic Sans MS', cursive, sans-serif;"
+            onclick="restartGame()">Играть снова</button>
+    </div>
+
+    <div id="countdown"></div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const nutImg = new Image();
+        nutImg.src = 'nut.png';
+
+        const clockImg = new Image();
+        clockImg.src = 'clock.png';
+
+        const liveImg = new Image();
+        liveImg.src = 'addlive.png';
+
+        const invincibilityBonusImg = new Image();
+        invincibilityBonusImg.src = 'invincibilty.png';
+
+        const backgroundImgs = [];
+        for (let i = 1; i <= 36; i++) {
+            const img = new Image();
+            img.src = `img/backs/back${String(i).padStart(2, '0')}.jpg`;
+            backgroundImgs.push(img);
+        }
+
+        const gravity = 0.6;
+        const jumpStrength = -12;
+        let keys = {};
+        let platforms = [];
+        let nuts = [];
+        let level = 1;
+        let collectedNuts = 0;
+        let destroyedTraps = 0; // Количество уничтоженных ловушек
+        let destroyedEnemies = 0; // Количество уничтоженных врагов
+        let totalNuts = 0;
+        let gameOver = false;
+        let countdownValue = 4;
+        let levelChanging = false;
+        let currentBackgroundImg = backgroundImgs[0];
+        let collectiblesName = "Орешков: ";
+        let victoryMusic;
+        let lives = 3; // Начальное количество жизней
+        let score = 0; // Переменная для очков
+
+        let LiveAdd = null; // Глобальная переменная для бонуса жизни
+        let invincibilityBonus = null; // Глобальная переменная для бонуса неуязвимости
+        let isInvincible = false;  // Флаг непобедимости
+        let invincibilityDuration = 10000;  // Длительность непобедимости в миллисекундах
+        let invincibilityTimer;
+        let nutEffects = []; // Массив для анимации собранных орешков
+        let traps = []; // Массив для ловушек
+        let enemy = null; // Переменная для врага (волка)
+        let isFacingLeft = false; // Изначально бобр смотрит вправо
+
+
+        const bobrSprite = new Image();
+        bobrSprite.src = 'bobr-sprite.png';
+
+        let frameIndex = 0; // Текущий кадр анимации
+        let frameCount = 4; // Всего кадров
+        let frameWidth = 200; // Ширина одного кадра
+        let frameHeight = 200; // Высота одного кадра
+        let animationSpeed = 8; // Скорость анимации (чем больше, тем медленнее)
+
+        let movementCounter = 0; // Счётчик для скорости смены кадров
+
+        // Звуки
+        const jumpSound = new Audio('sounds/jump1.mp3');
+        const eatSound = new Audio('sounds/eat.mp3');
+        const addTimeSound = new Audio('sounds/addtime.mp3');
+
+        let player = {
+            x: 50,
+            y: canvas.height - 150,
+            width: 50,
+            height: 50,
+            dx: 0,
+            dy: 0,
+            speed: 5,
+            jumping: false,
+            grounded: false
+        };
+
+
+        // функции для меню улучшений
+        function openUpgradesMenu() {
+            document.getElementById("pauseScreen").style.display = "none";
+            document.getElementById("upgradesMenu").style.display = "block";
+        }
+
+        function closeUpgradesMenu() {
+            document.getElementById("pauseScreen").style.display = "flex";
+            document.getElementById("upgradesMenu").style.display = "none";
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.upgradeTab').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            document.getElementById(tabId + 'Tab').style.display = 'block';
+        }
+
+        function buyHomeUpgrade(upgrade, cost) {
+            if (score >= cost) {
+                score -= cost;
+
+                // Проверяем тип улучшения
+                switch (upgrade) {
+                    case 'bed':
+                        changeHomeBackground('img/home/base02.jpg'); // Меняем фон на новый
+                        break;
+                    case 'table':
+                        addFurnitureToHome('table');
+                        break;
+                    case 'lamp':
+                        addFurnitureToHome('lamp');
+                        break;
+                    case 'dam':
+                        addExteriorUpgrade('dam');
+                        break;
+                }
+
+                alert(`Вы улучшили домик: ${upgrade}`);
+            } else {
+                alert('Недостаточно очков');
+            }
+        }
+
+        // Функция для плавного изменения фона
+        function changeHomeBackground(newImage) {
+            const homeTab = document.getElementById("homeTab");
+            homeTab.style.opacity = 0; // Начало плавного исчезновения
+            setTimeout(() => {
+                homeTab.style.backgroundImage = `url(${newImage})`;
+                homeTab.style.opacity = 1; // Плавное появление нового фона
+            }, 500); // Ожидание перед сменой фона
+        }
+
+
+
+
+
+        // Функция для создания ловушек
+
+        const trapImg = new Image();
+        trapImg.src = 'trap.png'; // Изображение ловушки
+
+        function createTraps() {
+            traps = [];
+            let numTraps = 0;
+
+            // Устанавливаем количество ловушек в зависимости от уровня
+            if (level >= 30) {
+                numTraps = 8; // 8 ловушек на уровнях 30-36
+            } else if (level >= 25) {
+                numTraps = 7; // 7 ловушек на уровнях 25-29
+            } else if (level >= 20) {
+                numTraps = 6; // 6 ловушек на уровнях 20-24
+            } else if (level >= 17) {
+                numTraps = 5; // 5 ловушек на уровнях 17-19
+            } else if (level >= 14) {
+                numTraps = 4; // 4 ловушки на уровнях 14-16
+            } else if (level >= 11) {
+                numTraps = 3; // 3 ловушки на уровнях 11-13
+            } else if (level >= 8) {
+                numTraps = 2; // 2 ловушки на уровнях 8-10
+            } else if (level >= 5) {
+                numTraps = 1; // 1 ловушка на уровнях 5-7
+            }
+
+            // Фильтруем платформы, чтобы исключить падающие
+            const elevatedPlatforms = platforms.filter(platform => platform.y < canvas.height - 100 && !platform.isFalling);
+            const minDistanceFromItems = 100; // Минимальное расстояние до предметов
+            const maxAttempts = 15; // Максимальное количество попыток для размещения ловушки
+
+            for (let i = 0; i < numTraps; i++) {
+                let placed = false; // Флаг успешного размещения ловушки
+                let attempts = 0;
+
+                while (!placed && attempts < maxAttempts) {
+                    const randomPlatform = elevatedPlatforms[Math.floor(Math.random() * elevatedPlatforms.length)];
+                    const trapX = randomPlatform.x + Math.random() * (randomPlatform.width - 35);
+                    const trapY = randomPlatform.y - 35;
+
+                    // Проверяем, чтобы ловушка не находилась рядом с любым предметом
+                    const isTooClose = nuts.some(nut =>
+                        Math.abs(nut.y - trapY) < minDistanceFromItems &&
+                        Math.abs(nut.x - trapX) < minDistanceFromItems) ||
+                        (LiveAdd && Math.abs(LiveAdd.y - trapY) < minDistanceFromItems && Math.abs(LiveAdd.x - trapX) < minDistanceFromItems) ||
+                        (invincibilityBonus && Math.abs(invincibilityBonus.y - trapY) < minDistanceFromItems && Math.abs(invincibilityBonus.x - trapX) < minDistanceFromItems) ||
+                        (TimeAdd && Math.abs(TimeAdd.y - trapY) < minDistanceFromItems && Math.abs(TimeAdd.x - trapX) < minDistanceFromItems);
+
+                    // Если подходящее место найдено, добавляем ловушку и выходим из цикла
+                    if (!isTooClose) {
+                        traps.push({ x: trapX, y: trapY, width: 35, height: 35 });
+                        placed = true;
+                    }
+
+                    attempts++;
+                }
+            }
+        }
+
+        // Функция для создания врага
+        const wolfImg = new Image();
+        wolfImg.src = 'boaricon.png'; // Изображение волка
+
+        function createEnemy() {
+            // Находим подходящую платформу, достаточно длинную для волка и не падающую
+            const platformForEnemy = platforms.find(platform =>
+                platform.y < canvas.height - 200 &&
+                platform.width >= 100 &&
+                !platform.isFalling // Убедитесь, что платформа не падает
+            );
+
+            if (platformForEnemy) {
+                enemy = {
+                    x: platformForEnemy.x, // Начальная позиция по X на платформе
+                    y: platformForEnemy.y - 50, // Размещение на вершине платформы
+                    width: 50,
+                    height: 50,
+                    speed: 1.5, // Уменьшенная скорость
+                    direction: 1,
+                    platform: platformForEnemy // Связь с платформой для ограничения движения
+                };
+            }
+        }
+
+        // Обновление позиции врага
+        function updateEnemy() {
+            if (enemy) {
+                enemy.x += enemy.speed * enemy.direction;
+
+                // Меняем направление при достижении границ платформы
+                if (enemy.x <= enemy.platform.x - 15 || enemy.x + enemy.width >= enemy.platform.x + enemy.platform.width + 15) {
+                    enemy.direction *= -1;
+                }
+            }
+        }
+
+        function updateBobrAnimation() {
+            // Обновляем позицию и направление бобра
+            if (player.dx < 0) {
+                isFacingLeft = true;
+            } else if (player.dx > 0) {
+                isFacingLeft = false;
+            }
+
+            if (player.dx !== 0) { // Анимация только при движении
+                movementCounter++;
+                if (movementCounter >= animationSpeed) {
+                    frameIndex = (frameIndex + 1) % frameCount; // Переход к следующему кадру
+                    movementCounter = 0; // Сброс счётчика для равномерной смены кадров
+                }
+            } else {
+                frameIndex = 0; // При остановке возвращаемся к первому кадру
+            }
+            // эффект неуязвимости
+            if (isInvincible) {
+                player.hue += 1; // Медленное изменение цвета
+                if (player.hue >= 360) {
+                    player.hue = 0; // Сброс после полного цикла цветов
+                }
+            }
+
+        }
+
+        // Обработка столкновения игрока с ловушками и врагом
+        function checkCollisions() {
+            traps.forEach(trap => {
+                if (
+                    player.x < trap.x + trap.width &&
+                    player.x + player.width > trap.x &&
+                    player.y < trap.y + trap.height &&
+                    player.y + player.height > trap.y
+                ) {
+                    // Создаём взрыв в месте столкновения
+                    createExplosion(trap.x + trap.width / 2, trap.y + trap.height / 2);
+
+                    // Определяем ловушки в радиусе взрыва
+                    const explosionRadius = 50;
+                    traps = traps.filter(t => {
+                        const distance = Math.sqrt((t.x - trap.x) ** 2 + (t.y - trap.y) ** 2);
+                        if (distance <= explosionRadius) {
+                            createExplosion(t.x + t.width / 2, t.y + t.height / 2); // Взрыв для соседних ловушек
+                            if (!isInvincible) lives--; // Если не под непобедимостью, уменьшаем жизнь
+                            destroyedTraps++;
+                            score += 15;
+                            return false; // Удаляем ловушку
+                        }
+                        return true; // Оставляем ловушку, если она вне радиуса
+                    });
+                }
+            });
+
+            // Проверка столкновения с врагом
+            if (enemy &&
+                player.x < enemy.x + enemy.width &&
+                player.x + player.width > enemy.x &&
+                player.y < enemy.y + enemy.height &&
+                player.y + player.height > enemy.y
+            ) {
+                if (isInvincible) {
+                    // Если бобр под непобедимостью, враг исчезает
+                    score += 50; // Очки за уничтожение врага под непобедимостью
+                    destroyedEnemies++;
+                    enemy = null;
+                } else {
+                    // Если бобр не под непобедимостью, сбрасываем уровень
+                    resetLevel();
+                }
+            }
+        }
+
+        // Включаем события на определённых уровнях
+        function startLevel() {
+            traps = [];
+            enemy = null;
+            createTraps();
+            // Волк появляется на уровнях 3, 6, 9 и 12
+            if (level === 3 || level === 6 || level === 9 || level === 12 || level === 15 || level === 18 || level === 21 || level === 24 || level === 27 || level === 30 || level === 33 || level === 36) {
+                createEnemy();
+            }
+        }
+
+        function completeLevel() {
+            // Базовый счёт перед начислением бонусов
+            let baseScore = score;
+
+            // Подсчёт очков за собранные предметы и взаимодействия
+            const nutPoints = collectedNuts * 10; // 10 очков за каждый орех
+            const trapPoints = destroyedTraps * 15; // 15 очков за каждую ловушку
+            const enemyPoints = destroyedEnemies * 50; // 50 очков за каждого врага
+            const remainingTimeBonus = Math.max(0, timeLeft) * 5; // Очки за оставшееся время
+
+            // Добавляем к общему счёту
+            score += nutPoints + trapPoints + enemyPoints + remainingTimeBonus;
+
+            // Определяем рейтинг за уровень
+            let rating, ratingClass, backgroundImage;
+            if (collectedNuts >= totalNuts * 0.9) {
+                rating = "Отлично!";
+                score += 50;
+                ratingClass = "result-excellent";
+                backgroundImage = "url('img/backs/nextlevel.jpg')";
+            } else if (collectedNuts >= totalNuts * 0.75) {
+                rating = "Хорошо";
+                score += 25;
+                ratingClass = "result-good";
+                backgroundImage = "url('img/backs/nextlevel.jpg')";
+            } else {
+                rating = "Могло быть лучше";
+                score += 10;
+                ratingClass = "result-average";
+                backgroundImage = "url('img/backs/nextlevel.jpg')";
+            }
+
+            // Настраиваем экран результатов
+            isPaused = true;
+            const resultScreen = document.getElementById("resultScreen");
+            resultScreen.className = ratingClass;
+            resultScreen.style.backgroundImage = backgroundImage;
+            resultScreen.style.display = "flex";
+            resultContent.style.display = "block";
+            resultScreen.style.pointerEvents = "auto";
+
+            // Список начислений для показа с анимацией
+            const scoringDetails = [
+                `Базовый счёт: ${baseScore}`,
+                `За орешки (${collectedNuts} × 10): +${nutPoints}`,
+                `За ловушки (${destroyedTraps} × 15): +${trapPoints}`,
+                `За врагов (${destroyedEnemies} × 50): +${enemyPoints}`,
+                `За оставшееся время: +${remainingTimeBonus}`,
+                `Итог: ${score}`
+            ];
+
+            // Анимация начисления очков
+            const resultMessage = document.getElementById("resultMessage");
+            resultMessage.innerHTML = `Ты помог Бубору пройти уровень!<br>${rating}<br>`;
+            scoringDetails.forEach((detail, index) => {
+                setTimeout(() => {
+                    resultMessage.innerHTML += `<br>${detail}`;
+                }, index * 1000); // Показываем каждую строку с задержкой в 1 секунду
+            });
+
+            // Переход на следующий уровень после экрана результатов
+            setTimeout(() => {
+                resultScreen.style.display = "none";
+                resultScreen.style.pointerEvents = "none";
+                isPaused = false;
+                level++;
+
+                if (level > 36) {
+                    showVictoryScreen(); // Экран победы
+                } else {
+                    currentBackgroundImg = backgroundImgs[level - 1];
+                    resetLevel(); // Запускаем следующий уровень
+                }
+            }, 2000 + (scoringDetails.length * 1000)); // 3 секунд плюс задержка для анимации
+        }
+
+        function createPlatforms() {
+            platforms = [];
+            const groundHeight = canvas.height - 50;
+
+            // Создаём землю
+            if (level < 4) {
+                // Сплошная земля для первых 3 уровней
+                platforms.push({
+                    x: 0,
+                    y: groundHeight,
+                    width: canvas.width,
+                    height: 50,
+                    isMoving: false // Земля неподвижна
+                });
+            } else {
+                // Движущаяся платформа для земли с 4 уровня
+                let groundWidth = canvas.width / 3; // По умолчанию 1/3 экрана
+                if (level >= 7) {
+                    groundWidth = canvas.width * 0.1; // С 7 уровня - 10% ширины экрана
+                }
+                platforms.push({
+                    x: 0,
+                    y: groundHeight,
+                    width: groundWidth,
+                    height: 50,
+                    speed: platformSpeed,
+                    direction: 1,
+                    isMoving: true
+                });
+            }
+
+            // Генерация остальных платформ (без изменений)
+            const numPlatforms = Math.floor(Math.random() * 30) + 20;
+            generatePlatforms(numPlatforms);
+            adjustPlatforms();
+        }
+
+        // Переменные для управления движением платформы
+        let platformSpeed = 2; // Скорость движения платформы
+        let platformDirection = 1; // Направление: 1 — вправо, -1 — влево
+
+        function generateStartGround(groundHeight) {
+            // Ширина платформы для земли под бобром
+            const startPlatformWidth = 200;
+            const startX = 0; // Стартовая позиция бобра по оси X
+
+            // Создаем платформу под стартовой позицией бобра
+            platforms.push({
+                x: startX,
+                y: groundHeight, // Уровень земли
+                width: startPlatformWidth,
+                height: 50,
+                speed: platformSpeed,
+                direction: platformDirection,
+                isMoving: true // Флаг для движущейся платформы
+            });
+        }
+
+        // Обновляем позицию движущейся платформы на каждом кадре
+        function updateMovingPlatform() {
+            platforms.forEach(platform => {
+                if (platform.isMoving) {
+                    platform.x += platform.speed * platform.direction;
+
+                    if (platform.x <= 0 || platform.x + platform.width >= canvas.width) {
+                        platform.direction *= -1;
+                    }
+
+                    if (player.y + player.height === platform.y &&
+                        player.x + player.width > platform.x &&
+                        player.x < platform.x + platform.width) {
+                        player.x += platform.speed * platform.direction;
+                    }
+                }
+
+                if (platform.isFalling) {
+                    if (!platform.isActivated && player.y + player.height === platform.y &&
+                        player.x + player.width > platform.x &&
+                        player.x < platform.x + platform.width) {
+                        platform.isActivated = true;
+                    }
+
+                    if (platform.isActivated) {
+                        if (platform.fallDelay > 0) {
+                            platform.fallDelay--;
+                        } else {
+                            platform.y += platform.fallSpeed * 3.0; // Увеличенная скорость падения
+                        }
+                    }
+                }
+
+                if (platform.y > canvas.height) {
+                    platforms = platforms.filter(p => p !== platform);
+                }
+            });
+        }
+
+
+
+        // Функция для генерации платформ
+        function generatePlatforms(numPlatforms) {
+            const maxLevels = 6; // Максимальное количество уровней (высоты) платформ
+            let previousPlatforms = [{ x: 0, y: canvas.height - 100, width: canvas.width, height: 50 }];
+
+            // Устанавливаем количество падающих платформ в зависимости от уровня
+            let fallingPlatformsCount = 0;
+            if (level >= 30) {
+                fallingPlatformsCount = 8; // 30-36 уровни: 8 падающих платформ
+            } else if (level >= 25) {
+                fallingPlatformsCount = 7; // 26-30 уровни: 7 падающих платформ
+            } else if (level >= 20) {
+                fallingPlatformsCount = 6; // 20-25 уровни: 6 падающих платформ
+            } else if (level >= 17) {
+                fallingPlatformsCount = 5; // 17-19 уровни: 5 падающих платформ
+            } else if (level >= 14) {
+                fallingPlatformsCount = 4; // 14-16 уровни: 4 падающих платформы
+            } else if (level >= 11) {
+                fallingPlatformsCount = 3; // 11-13 уровни: 3 падающих платформы
+            } else if (level >= 7) {
+                fallingPlatformsCount = 2; // 7-10 уровни: 2 падающих платформы
+            }
+
+            for (let i = 0; i < numPlatforms; i++) {
+                let platform;
+                let valid = false;
+                let platformLevel = Math.floor(i % maxLevels);
+
+                while (!valid) {
+                    platform = getStructuredPlatform(platformLevel);
+                    valid = previousPlatforms.some(p => isReachable(p, platform)) &&
+                        !platforms.some(p => !isFarEnough(p, platform));
+                }
+
+                // Назначаем случайной платформе статус падающей, если еще есть доступные
+                if (fallingPlatformsCount > 0 && Math.random() < 0.2) { // 20% шанс
+                    platform.isFalling = true;
+                    platform.fallDelay = 100; // Платформа начнёт падать через 100 кадров (примерно 2 секунды)
+                    platform.fallSpeed = 2; // Скорость падения платформы
+                    fallingPlatformsCount--;
+                } else {
+                    platform.isFalling = false;
+                }
+
+                platforms.push(platform);
+                previousPlatforms.push(platform);
+            }
+        }
+
+        // Функция для создания платформы на заданной высоте (platformLevel)
+        function getStructuredPlatform(platformLevel) {
+            const platformWidth = Math.random() * 100 + 50; // Ширина от 50 до 150
+            const platformHeight = 20; // Фиксированная высота
+            const x = Math.random() * (canvas.width - platformWidth); // Случайное X
+            const y = canvas.height - 130 - (platformLevel * 130); // Y с учётом уровня высоты платформы (platformLevel)
+            return { x, y, width: platformWidth, height: platformHeight };
+        }
+
+        // Функция для проверки, насколько платформы достижимы по вертикали
+        function isReachable(p1, p2) {
+            return p1.y - p2.y <= 150 && Math.abs(p1.x - p2.x) <= 200;
+        }
+
+        // Функция для проверки расстояния между платформами
+        function isFarEnough(p1, p2) {
+            const minDistance = 100;
+            return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2) >= minDistance;
+        }
+
+        // Функция для корректировки платформ
+        function adjustPlatforms() {
+            platforms.forEach(platform => {
+                // Корректируем платформы, которые выходят за границы экрана
+                if (platform.x < 0) platform.x = 0;
+                if (platform.x + platform.width > canvas.width) {
+                    platform.width = canvas.width - platform.x;
+                }
+
+                // Смещаем платформы чуть ниже, если они слишком высоко
+                if (platform.y < canvas.height - 150) {
+                    platform.y += 50;
+                }
+            });
+        }
+
+
+        function createNuts() {
+            nuts = [];
+            totalNuts = 15;
+            collectedNuts = 0;
+
+            // Отфильтровываем платформы, которые не падают
+            const elevatedPlatforms = platforms.filter(platform => platform.y < canvas.height - 100 && !platform.isFalling);
+            const platformsWithNuts = new Set();
+
+            elevatedPlatforms.forEach(platform => {
+                if (Math.random() > 0.4 && nuts.length < totalNuts && !platformsWithNuts.has(platform)) {
+                    const nutX = Math.random() * (platform.width - 35) + platform.x;
+                    const nutY = platform.y - 35;
+                    if (nutX >= 0 && nutX <= canvas.width && nutY >= 0 && nutY <= canvas.height) {
+                        nuts.push({
+                            x: nutX,
+                            y: nutY,
+                            width: 35,
+                            height: 35
+                        });
+                        platformsWithNuts.add(platform);
+                    }
+                }
+            });
+
+            // Если орешков меньше, чем totalNuts, продолжаем добавлять орешки на оставшиеся платформы
+            const remainingPlatforms = elevatedPlatforms.filter(platform =>
+                !platformsWithNuts.has(platform) // Платформы, на которых ещё нет орешков
+            );
+
+            while (nuts.length < totalNuts && remainingPlatforms.length > 0) {
+                const randomIndex = Math.floor(Math.random() * remainingPlatforms.length);
+                const randomPlatform = remainingPlatforms[randomIndex];
+
+                const nutX = Math.random() * (randomPlatform.width - 30) + randomPlatform.x;
+                const nutY = randomPlatform.y - 30;
+                if (nutX >= 0 && nutX <= canvas.width && nutY >= 0 && nutY <= canvas.height) {
+                    nuts.push({ x: nutX, y: nutY, width: 30, height: 30 });
+                    platformsWithNuts.add(randomPlatform); // Добавляем платформу в список с орешком
+                }
+
+                // Удаляем платформу из списка после того, как на неё добавлен орешек
+                remainingPlatforms.splice(randomIndex, 1);
+            }
+
+            // Создание бонуса времени с эффектом вращения
+            if (remainingPlatforms.length > 0) {
+                const randomIndex = Math.floor(Math.random() * remainingPlatforms.length);
+                const specialPlatform = remainingPlatforms[randomIndex];
+                const specialNutX = Math.random() * (specialPlatform.width - 40) + specialPlatform.x;
+                const specialNutY = specialPlatform.y - 40;
+                if (specialNutX >= 0 && specialNutX <= canvas.width && specialNutY >= 0 && specialNutY <= canvas.height) {
+                    TimeAdd = {
+                        x: specialNutX,
+                        y: specialNutY,
+                        width: 40,
+                        height: 40,
+                        rotation: 0 // Начальный угол для вращения
+                    };
+                }
+            }
+
+            // Создание бонуса жизней с эффектом пульсации
+            if (remainingPlatforms.length > 0 && Math.random() < 0.35) { // 35% вероятность
+                const randomIndex = Math.floor(Math.random() * remainingPlatforms.length);
+                const specialPlatform2 = remainingPlatforms[randomIndex];
+                const specialLiveX = Math.random() * (specialPlatform2.width - 38) + specialPlatform2.x;
+                const specialLiveY = specialPlatform2.y - 40;
+                if (specialLiveX >= 0 && specialLiveX <= canvas.width && specialLiveY >= 0 && specialLiveY <= canvas.height) {
+                    LiveAdd = {
+                        x: specialLiveX,
+                        y: specialLiveY,
+                        width: 38,
+                        height: 40,
+                        scale: 1,            // Начальный масштаб для пульсации
+                        pulseDirection: 0.01 // Направление для анимации пульсации
+                    };
+                }
+            }
+
+            // Создание бонуса неуязвимости
+            if (remainingPlatforms.length > 0 && Math.random() < 0.20) { // Вероятность появления бонуса непобедимости 20%
+                const randomIndex = Math.floor(Math.random() * remainingPlatforms.length);
+                const specialPlatform3 = remainingPlatforms[randomIndex];
+                const invincibilityX = Math.random() * (specialPlatform3.width - 50) + specialPlatform3.x;
+                const invincibilityY = specialPlatform3.y - 50;
+
+                if (invincibilityX >= 0 && invincibilityX <= canvas.width && invincibilityY >= 0 && invincibilityY <= canvas.height) {
+                    invincibilityBonus = {
+                        x: invincibilityX,
+                        y: invincibilityY,
+                        width: 50,
+                        height: 50,
+                        hue: 0, // Начальный цвет для свечения
+                    };
+                }
+            }
+
+        }
+
+        function update() {
+            if (isPaused) return; // Если пауза включена, не обновляем игру
+            updateMovingPlatform(); // Обновляем положение движущейся платформы
+            updateBobrAnimation(); // Обновление анимации бобра
+            updateEnemy(); // Обновление позиции врага
+            updateTrapEffects();
+            updateInvincibilityBonus();
+            checkCollisions(); // Проверка столкновений с ловушками и врагом
+            updateParticles(); // Обновление частиц для эффектов
+            updateExplosions();
+
+
+            if (gameOver || levelChanging) return;
+
+            if (keys.ArrowRight) {
+                player.dx = player.speed;
+            } else if (keys.ArrowLeft) {
+                player.dx = -player.speed;
+            } else {
+                player.dx = 0;
+            }
+
+            player.dy += gravity;
+
+            player.x += player.dx;
+            player.y += player.dy;
+
+            function gameLost() {
+                isPaused = true; // Включаем паузу
+                document.getElementById("victory").style.display = "block"; // Показываем экран поражения
+                document.querySelector("#victory h1").innerHTML = "К сожалению, игра проиграна...";
+                document.querySelector("#victory p").innerHTML = `
+    Спасибо за игру!<br>
+    Бубор очень старался, но не смог<br>
+    Не не отчаивайся. Это было незабываемое приключение!<br><br><br><br>
+    Попробуй ещё раз - всё получится!
+`;
+                victory.style.backgroundImage = "url('img/backs/loose.jpg')";
+                let backgroundMusic = document.getElementById("backgroundMusic");
+                backgroundMusic.pause();  // Остановка воспроизведения
+                backgroundMusic.currentTime = 0; // Сброс на начало
+                victoryMusic = new Audio('sounds/loose.mp3');
+                victoryMusic.play();  // Запускаем музыку поражения
+            }
+
+            if (player.y + player.height > canvas.height) {
+                lives--; // Уменьшаем количество жизней
+                if (lives <= 0) { // Экран поражения
+                    gameLost();
+                } else {
+                    gameOver = true;
+                    storyDiv.style.backgroundImage = "url('img/backs/faling.jpg')";
+                    storyDiv.style.textAlign = "center";
+                    storyDiv.innerHTML = "<br><br><br><br><br><br>Бубер упал с большой высоты!<br><br>Попробуй ещё раз!";
+                    storyDiv.style.color = "red"; // Цвет текста
+                    storyDiv.style.fontSize = "64px"; // Размер шрифта
+                    storyDiv.style.display = "flex";
+                    startCountdown();
+                    resetLevel(); // Сбрасываем уровень, если жизни ещё есть
+                }
+            }
+
+
+            player.grounded = false;
+            platforms.forEach(platform => {
+                if (
+                    player.x < platform.x + platform.width &&
+                    player.x + player.width > platform.x &&
+                    player.y + player.height <= platform.y + platform.height &&
+                    player.y + player.height + player.dy >= platform.y
+                ) {
+                    player.jumping = false;
+                    player.grounded = true;
+                    player.dy = 0;
+                    player.y = platform.y - player.height;
+                }
+            });
+
+            if (lives <= 0) {
+                gameOver = true; // Игра заканчивается
+                gameLost();
+            }
+
+            // Проверка столкновения с обычными орешками
+            nuts.forEach((nut, index) => {
+                if (
+                    player.x < nut.x + nut.width &&
+                    player.x + player.width > nut.x &&
+                    player.y < nut.y + nut.height &&
+                    player.y + player.height > nut.y
+                ) {
+                    // Добавляем анимацию для собранного орешка
+                    nutEffects.push({ x: nut.x, y: nut.y, scale: 1, alpha: 1 });
+
+                    nuts.splice(index, 1); // Удаляем орешек из массива
+                    collectedNuts++; // Увеличиваем счётчик собранных орешков
+                    score += 10; // Начисление 10 очков за орешек
+                    eatSound.play(); // Проигрываем звук поедания орешка
+                }
+            });
+
+            // Проверка столкновения с TimeAdd, если он ещё существует
+            if (TimeAdd !== null) {
+                if (
+                    player.x < TimeAdd.x + TimeAdd.width &&
+                    player.x + player.width > TimeAdd.x &&
+                    player.y < TimeAdd.y + TimeAdd.height &&
+                    player.y + player.height > TimeAdd.y
+                ) {
+                    TimeAdd = null; // Удаляем TimeAdd (делаем его null)
+                    timeLeft += 10; // Увеличиваем параметр timeLeft на 10
+                    addTimeSound.play(); // Проигрываем звук добавления времени
+                }
+            }
+
+            // Проверка столкновения с LiveAdd, если он ещё существует
+            if (LiveAdd !== null) {
+                if (
+                    player.x < LiveAdd.x + LiveAdd.width &&
+                    player.x + player.width > LiveAdd.x &&
+                    player.y < LiveAdd.y + LiveAdd.height &&
+                    player.y + player.height > LiveAdd.y
+                ) {
+                    LiveAdd = null; // Удаляем LiveAdd (делаем его null)
+                    lives += 1; // Увеличиваем параметр lives на 1
+                    addTimeSound.play(); // Проигрываем звук добавления времени
+                }
+            }
+
+            // Проверка столкновения с invincibilityBonus, если он ещё существует
+            if (invincibilityBonus !== null) {
+                if (
+                    player.x < invincibilityBonus.x + invincibilityBonus.width &&
+                    player.x + player.width > invincibilityBonus.x &&
+                    player.y < invincibilityBonus.y + invincibilityBonus.height &&
+                    player.y + player.height > invincibilityBonus.y
+                ) {
+                    invincibilityBonus = null; // Удаляем invincibilityBonus (делаем его null)
+                    isInvincible = true;
+                    player.hue = 0; // Начальное значение цвета для эффекта свечения
+                    clearTimeout(invincibilityTimer); // Сбрасываем таймер, если он был запущен
+
+                    // Таймер для отключения непобедимости через заданное время
+                    invincibilityTimer = setTimeout(() => {
+                        isInvincible = false;
+                    }, invincibilityDuration);
+                    addTimeSound.play(); // Проигрываем звук добавления времени
+                }
+            }
+
+
+            if (keys[" "] && !player.jumping && player.grounded) {
+                player.jumping = true;
+                player.dy = jumpStrength;
+                jumpSound.play();
+            }
+
+
+            // Логика перехода на следующий уровень при собирании всех орешков
+            if (collectedNuts >= totalNuts) {
+                completeLevel();
+                levelChanging = true;
+                let timeoutDuration = 2000; // Таймаут по умолчанию — 2 секунды
+
+                StoryAdvance();
+
+                setTimeout(() => {
+                    resetLevel(); // Переход к следующему уровню или показ экрана победы
+                }, timeoutDuration);
+
+            }
+        }
+        const groundImg = new Image();
+        groundImg.src = 'img/grounds/ground.png';
+        BackgroundImg = 'img/backs/back01.jpg'
+
+        function restartGame() {
+            lives = 3; // Сброс жизней
+            isPaused = false; // Выключаем паузу
+            timeLeft = 50;
+            groundImg.src = 'img/grounds/ground.png';
+            level = 1; // Сброс уровня
+            collectedNuts = 0; // Сброс количества собранных орехов
+
+            // Остановка музыки победы
+            if (victoryMusic) {
+                victoryMusic.pause();  // Останавливаем музыку победы
+                victoryMusic.currentTime = 0; // Сбрасываем на начало
+            }
+
+            // Запуск фоновой музыки
+            const backgroundMusic = document.getElementById("backgroundMusic");
+            backgroundMusic.pause(); // Останавливаем текущую музыку
+            backgroundMusic.src = "sounds/music1.mp3";
+            backgroundMusic.load(); // Загружаем новый трек
+            backgroundMusic.play(); // Запускаем воспроизведение новой музыки
+
+            // Сброс всех элементов на экране
+            document.getElementById("victory").style.display = "none";
+
+            resetLevel(); // Функция для сброса уровня
+        }
+
+
+        function startCountdown() {
+            let countdown = document.getElementById("countdown");
+            countdown.style.display = "block";
+            countdown.innerHTML = countdownValue;
+
+            const countdownInterval = setInterval(() => {
+                countdownValue--;
+                countdown.innerHTML = countdownValue;
+                if (countdownValue <= 0) {
+                    clearInterval(countdownInterval);
+                    countdown.style.display = "none";
+                    countdownValue = 5;
+                    resetLevel();
+                    isPaused = false; // Выключаем паузу
+                    storyDiv.style.display = 'none';
+                    startButton.style.display = 'none'; // Скрыть кнопку после нажатия;
+
+                    timeLeft = 55;
+
+                }
+            }, 1000);
+        }
+
+        window.addEventListener("keydown", (e) => {
+            keys[e.key] = true;
+        });
+
+        window.addEventListener("keyup", (e) => {
+            keys[e.key] = false;
+        });
+
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        resetLevel();
+        gameLoop();
+    </script>
+    <script>
+
+
+        let timerInterval;
+        let isPaused = false; // Флаг, который отслеживает состояние паузы
+        let timeLeft = 50; // Устанавливаем начальное время
+
+        // Функция для начала отсчёта времени
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (!isPaused) { // Если не на паузе
+                    timeLeft--;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval); // Останавливаем таймер
+
+                        // Проверяем, собрано ли минимальное количество предметов
+                        const minimumRequiredItems = 7; // Минимум предметов для перехода на следующий уровень
+                        if (collectedNuts >= minimumRequiredItems) {
+                            completeLevel(); // Переход к завершению уровня
+                            if (level % 3 === 0) {
+                                setTimeout(() => StoryAdvance(), 5000); // Вызов сюжетной вставки через 5 секунд после экрана результатов
+                            }
+                        } else {
+                            // Если предметов недостаточно, отнимаем жизнь или показываем экран поражения
+                            lives--;
+                            if (lives <= 0) {
+                                gameLost(); // Экран поражения, если жизней нет
+                            } else {
+                                // Показываем сообщение об окончании времени и потере жизни
+                                gameOver = true;
+                                document.getElementById("gameOver").style.display = "block";
+                                storyDiv.style.backgroundImage = "url('img/backs/wolf.jpg')";
+                                storyDiv.style.textAlign = "center";
+                                storyDiv.innerHTML = "<br><br><br>Время вышло!<br>Волк нашёл Бубера и сожрал его!<br>Попробуй ещё раз!";
+                                storyDiv.style.color = "red"; // Цвет текста
+                                storyDiv.style.fontSize = "64px"; // Размер шрифта
+                                storyDiv.style.display = "flex";
+                                startCountdown(); // Запуск таймера для перезапуска уровня
+                            }
+                        }
+                    }
+                }
+            }, 1000); // Обновление таймера каждую секунду
+        }
+
+        function resetLevel() {
+            timeLeft = 50; // Устанавливаем начальное время
+            collectedNuts = 0; // Сбрасываем счётчик орехов
+            destroyedTraps = 0; // Сбрасываем счётчик ловушек
+            destroyedEnemies = 0; // Сбрасываем счётчик убитых врагов
+            player.x = 50;
+            player.y = canvas.height - 150;
+            player.dx = 0;
+            player.dy = 0;
+            player.jumping = false;
+            player.grounded = false;
+            gameOver = false;
+            levelChanging = false;
+            document.getElementById("gameOver").style.display = "none";
+            document.getElementById("countdown").style.display = "none";
+
+            clearInterval(timerInterval); // Останавливаем старый таймер
+            startTimer(); // Запускаем таймер заново при перезапуске уровня
+
+            createPlatforms();
+            createNuts();
+            startLevel(); // Запускаем уникальные элементы уровня, такие как ловушки и враги
+            createWeatherEffect(); // Устанавливаем эффект в зависимости от уровня
+        }
+
+        function render() {
+
+            if (isPaused) return; // Если пауза включена, не выполняем отрисовку
+
+            ctx.drawImage(currentBackgroundImg, 0, 0, canvas.width, canvas.height);
+
+            // Отрисовка платформ с текстурой
+            platforms.forEach(platform => {
+                ctx.save();
+
+                if (platform.isFalling && platform.fallDelay > 0) {
+                    // Эффект тряски перед падением
+                    ctx.translate(platform.x + platform.width / 2, platform.y + platform.height / 2);
+                    ctx.rotate(Math.sin(Date.now() / 100) * 0.02); // Легкая вибрация
+                    ctx.drawImage(
+                        groundImg,
+                        -platform.width / 2, -platform.height / 2,
+                        platform.width, platform.height
+                    );
+                } else {
+                    // Обычная отрисовка платформ
+                    ctx.drawImage(
+                        groundImg,
+                        platform.x, platform.y,
+                        platform.width, platform.height
+                    );
+                }
+
+                ctx.restore();
+            });
+
+            renderTraps();  // Рендер ловушек
+            renderExplosions(ctx); // Рендерим взрывы поверх ловушек
+            renderParticles(); // Отрисовка частиц для эффектов
+
+
+            // Рендер врага
+            if (enemy) {
+                ctx.save(); // Сохраняем текущее состояние канваса
+
+                if (enemy.direction === -1) {
+                    // Отражаем изображение по горизонтали при движении влево
+                    ctx.translate(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2); // Перемещаем точку для отражения
+                    ctx.scale(-1, 1); // Зеркально отражаем по горизонтали
+                    ctx.drawImage(wolfImg, -enemy.width / 2, -enemy.height / 2, enemy.width, enemy.height);
+                } else {
+                    // Отображаем как обычно при движении вправо
+                    ctx.drawImage(wolfImg, enemy.x, enemy.y, enemy.width, enemy.height);
+                }
+
+                ctx.restore(); // Восстанавливаем состояние канваса
+            }
+            ctx.save(); // Сохраняем состояние контекста
+
+            if (isInvincible) {
+                // Создаём цветное свечение вокруг бобра
+                const gradient = ctx.createRadialGradient(
+                    player.x + player.width / 2,
+                    player.y + player.height / 2,
+                    0,
+                    player.x + player.width / 2,
+                    player.y + player.height / 2,
+                    30
+                );
+
+                // Настраиваем цвета градиента для свечения
+                gradient.addColorStop(0, `hsla(${player.hue}, 100%, 50%, 0.8)`);
+                gradient.addColorStop(1, `hsla(${player.hue}, 100%, 50%, 0)`);
+
+                // Заливаем градиентом вокруг бобра
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(
+                    player.x + player.width / 2,
+                    player.y + player.height / 2,
+                    30, // Радиус свечения
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            }
+
+            // Рендеринг бобра с анимацией и разворотом
+            ctx.save(); // Сохраняем текущее состояние канваса
+
+            if (isFacingLeft) {
+                // Отражаем изображение, если бобр смотрит влево
+                ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+                ctx.scale(-1, 1);
+                ctx.drawImage(
+                    bobrSprite,
+                    frameIndex * frameWidth, 0, // Текущий кадр
+                    frameWidth, frameHeight,
+                    -player.width / 2, -player.height / 2, // Центрирование изображения
+                    player.width, player.height
+                );
+            } else {
+                // Обычная отрисовка, если бобр смотрит вправо
+                ctx.drawImage(
+                    bobrSprite,
+                    frameIndex * frameWidth, 0, // Текущий кадр
+                    frameWidth, frameHeight,
+                    player.x, player.y,
+                    player.width, player.height
+                );
+            }
+
+            ctx.restore(); // Восстанавливаем сохранённое состояние канваса
+
+            // Отрисовка обычных орешков
+            nuts.forEach(nut => {
+                ctx.drawImage(nutImg, nut.x, nut.y, nut.width, nut.height);
+            });
+
+            // Отрисовка анимации для собранных орешков
+            nutEffects = nutEffects.filter(effect => effect.alpha > 0); // Убираем исчезнувшие орешки
+            nutEffects.forEach(effect => {
+                ctx.save();
+                ctx.globalAlpha = effect.alpha; // Применяем прозрачность
+                ctx.translate(effect.x + 15, effect.y + 15); // Смещаем центр анимации
+                ctx.scale(effect.scale, effect.scale); // Применяем масштабирование
+                ctx.drawImage(nutImg, -15, -15, 30, 30); // Рисуем орешек
+                ctx.restore();
+
+                // Обновляем параметры для следующего кадра
+                effect.scale += 0.05; // Увеличиваем масштаб
+                effect.alpha -= 0.05; // Уменьшаем прозрачность
+            });
+
+            // Отрисовка бонуса времени с эффектом вращения
+            if (TimeAdd) {
+                TimeAdd.rotation += 0.05; // Увеличиваем угол поворота (скорость вращения)
+
+                ctx.save();
+                ctx.translate(TimeAdd.x + TimeAdd.width / 2, TimeAdd.y + TimeAdd.height / 2); // Перемещаем центр к бонусу
+                ctx.rotate(TimeAdd.rotation); // Поворачиваем бонус
+                ctx.drawImage(clockImg, -TimeAdd.width / 2, -TimeAdd.height / 2, TimeAdd.width, TimeAdd.height); // Отрисовываем бонус
+                ctx.restore();
+            }
+
+            // Отрисовка бонуса жизни с эффектом пульсации
+            if (LiveAdd) {
+                LiveAdd.scale += LiveAdd.pulseDirection;
+                if (LiveAdd.scale >= 1.1 || LiveAdd.scale <= 0.9) {
+                    LiveAdd.pulseDirection *= -1; // Меняем направление при достижении границы
+                }
+
+                ctx.save();
+                ctx.translate(LiveAdd.x + LiveAdd.width / 2, LiveAdd.y + LiveAdd.height / 2); // Центрируем к бонусу
+                ctx.scale(LiveAdd.scale, LiveAdd.scale); // Применяем пульсацию
+                ctx.drawImage(liveImg, -LiveAdd.width / 2, -LiveAdd.height / 2, LiveAdd.width, LiveAdd.height);
+                ctx.restore();
+            }
+            // Отрисовка бонуса неуязвимости с эффектом мерцания
+
+            if (invincibilityBonus) {
+                ctx.save(); // Сохраняем состояние контекста
+
+                // Создаём радиальный градиент для свечения
+                const gradient = ctx.createRadialGradient(
+                    invincibilityBonus.x + invincibilityBonus.width / 2,
+                    invincibilityBonus.y + invincibilityBonus.height / 2,
+                    0,
+                    invincibilityBonus.x + invincibilityBonus.width / 2,
+                    invincibilityBonus.y + invincibilityBonus.height / 2,
+                    30
+                );
+
+                // Настраиваем цвета градиента для свечения
+                gradient.addColorStop(0, `hsla(${invincibilityBonus.hue}, 100%, 50%, 0.8)`);
+                gradient.addColorStop(1, `hsla(${invincibilityBonus.hue}, 100%, 50%, 0)`);
+
+                // Заливаем градиентом вокруг бонуса
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(
+                    invincibilityBonus.x + invincibilityBonus.width / 2,
+                    invincibilityBonus.y + invincibilityBonus.height / 2,
+                    30,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+
+                // Отрисовываем сам бонус
+                ctx.drawImage(
+                    invincibilityBonusImg,
+                    invincibilityBonus.x,
+                    invincibilityBonus.y,
+                    invincibilityBonus.width,
+                    invincibilityBonus.height
+                );
+
+                ctx.restore(); // Восстанавливаем состояние контекста
+            }
+
+            DrawHUD(); // Выводим количество собираемых предметов, жизни, таймер, очки на экран
+        }
+
+        // Начало игры
+        resetLevel();
+        gameLoop();
+    </script>
+
+</body>
+
+</html>
